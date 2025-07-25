@@ -11,8 +11,8 @@ export class Ball {
     this.dy = -4;
   }
 
-  update(gameOver, paddle) {
-    if (gameOver) return;
+  update(isGameOver, paddle) {
+    if (isGameOver) return false;
 
     this.x += this.dx;
     this.y += this.dy;
@@ -23,7 +23,7 @@ export class Ball {
 
     // 바닥 → 게임 오버 처리
     if (this.y > height) {
-      gameOver = true;
+      return true; // 바닥에 닿았음을 알림
     }
 
     // 패들 충돌
@@ -34,6 +34,7 @@ export class Ball {
     ) {
       this.dy *= -1;
     }
+    return false;
   }
 
 
