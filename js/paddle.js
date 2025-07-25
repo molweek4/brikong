@@ -17,7 +17,7 @@ export class Paddle {
     pop();
   }
 
-  update(activeItem) {
+  /*update(activeItem) {
     // 키보드로 테스트 (←/→)
     if (keyIsDown(LEFT_ARROW)) this.move(-1);
     if (keyIsDown(RIGHT_ARROW)) this.move(1);
@@ -28,7 +28,7 @@ export class Paddle {
     if (activeItem === "penalty") dir *= -1;
     this.x += dir * speed;
     this.x = constrain(this.x, this.w / 2, width - this.w / 2);
-  }
+  }*/
 
   applyPoseControl(poseInfo){
     const minX = this.w / 2;
