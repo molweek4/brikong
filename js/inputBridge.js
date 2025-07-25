@@ -2,6 +2,6 @@
 import { initPoseManager } from './poseManager.js';
 
 initPoseManager((poseInfo) => {
-
+    
 });
 
