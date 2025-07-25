@@ -1,0 +1,37 @@
+<!-- 전체 메인 페이지 -->
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brikong: 몸으로 하는 벽돌깨기</title>
+
+  <!-- 기본 스타일 -->
+  <style>
+    body {
+      margin: 0;
+      background-color: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: white;
+      font-family: sans-serif;
+    }
+
+    canvas {
+      border: 2px solid #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 게임 화면 표시용 -->
+  <canvas id="gameCanvas" width="640" height="480"></canvas>
+
+  <!-- Vite에서는 반드시 module로 로드 -->
+  <script type="module" src="/js/inputBridge.js"></script>
+
+</body>
+</html>
