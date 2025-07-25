@@ -27,12 +27,33 @@ export class Ball {
     }
 
     // 패들 충돌
-    if (
+    /*if (
       this.y + this.r > paddle.y - paddle.h / 2 &&
       this.x > paddle.x - paddle.w / 2 &&
       this.x < paddle.x + paddle.w / 2
     ) {
       this.dy *= -1;
+    }*/
+
+    //패들 충돌
+    if (
+      this.y + this.r > paddle.y - paddle.h / 2 &&
+      this.x > paddle.x - paddle.w / 2 &&
+      this.x < paddle.x + paddle.w / 2 &&
+      this.dy > 0 // 아래쪽으로 떨어질 때만
+    ) {
+      // 패들의 회전 각도 (단위: 도 → 라디안)
+      const angleRad = radians(paddle.angle);
+
+      // 기존 속도를 회전된 좌표계로 변환
+      const speed = Math.sqrt(this.dx ** 2 + this.dy ** 2);
+
+      // 새로운 반사 방향 계산
+      const newDx = speed * Math.sin(angleRad);
+      const newDy = -Math.abs(speed * Math.cos(angleRad)); // 위로 튕겨야 하므로 -
+
+      this.dx = newDx;
+      this.dy = newDy;
     }
   }
 
