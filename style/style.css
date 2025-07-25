@@ -1,0 +1,49 @@
+body {
+    margin: 0;
+    font-family: 'Gmarket Sans', 'Pretendard', sans-serif;
+    background: linear-gradient(to bottom, #fceabb, #f8b500);
+    overflow: hidden;
+    color: #333;
+  }
+  
+  #canvas-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+  }
+  
+  /* 버튼 스타일 */
+  button {
+    padding: 14px 28px;
+    font-size: 20px;
+    font-weight: bold;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    background: linear-gradient(to right, #ff9a9e, #fad0c4);
+    color: white;
+    box-shadow: 0 5px 15px rgba(255, 174, 201, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+  
+  button:hover {
+    transform: translateX(-50%) scale(1.08);
+    box-shadow: 0 8px 20px rgba(255, 174, 201, 0.6);
+  }
+  
+  #startBtn {
+    top: 50%;
+  }
+  
+  #restartBtn {
+    top: 62%;
+    display: none;
+  }
+  

@@ -1,15 +1,27 @@
 <!-- 전체 메인 페이지 -->
 <!DOCTYPE html>
-<html>
+<html style="height:100%;">
   <head>
     <meta charset="utf-8" />
     <title>벽돌깨기 with Pose</title>
+    <link rel="stylesheet" href="../style/style.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
-    <!-- 추후에 ml5.js도 여기에 추가 가능 -->
+    <script type="module" src="../js/sketch.js"></script>
   </head>
-  <body>
-    <script type="module" src="../js/main.js"></script>
-    <button id="startBtn" style="display:block; position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); font-size:24px;">시작</button>
-    <button id="restartBtn" style="display:none; position:absolute; left:50%; top:60%; transform:translate(-50%, -50%); font-size:24px;">재시작</button>
+
+  <body style="height:100vh; margin:0; position:relative;">
+    <div id="canvas-container"
+         style="display:flex; justify-content:center; align-items:center; height:100vh; width:100vw; position:relative;">
+      <!-- p5.js 캔버스가 여기에 들어감 -->
+    </div>
+    
+    <button id="startBtn"
+      style="display:block; position:absolute; font-size:24px; z-index:10;">
+      시작
+    </button>
+    <button id="restartBtn"
+      style="display:none; position:absolute; font-size:24px; z-index:10;">
+      재시작
+    </button>
   </body>
 </html>
