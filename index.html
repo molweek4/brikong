@@ -1,37 +1,18 @@
-<!-- 전체 메인 페이지 -->
-
+<!-- index.html (루트 위치, Vite entry point) -->
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Brikong: 몸으로 하는 벽돌깨기</title>
+  <head>
+    <meta charset="utf-8" />
+    <title>벽돌깨기 with Pose</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+  </head>
+  <body>
+    <button id="restartBtn"
+      style="display:none; position:absolute; left:50%; top:60%; transform:translate(-50%, -50%); font-size:24px;">
+      재시작
+    </button>
 
-  <!-- 기본 스타일 -->
-  <style>
-    body {
-      margin: 0;
-      background-color: #111;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      color: white;
-      font-family: sans-serif;
-    }
-
-    canvas {
-      border: 2px solid #fff;
-    }
-  </style>
-</head>
-<body>
-
-  <!-- 게임 화면 표시용 -->
-  <canvas id="gameCanvas" width="640" height="480"></canvas>
-
-  <!-- Vite에서는 반드시 module로 로드 -->
-  <script type="module" src="/js/inputBridge.js"></script>
-
-</body>
+    <!-- Vite 방식: 절대 경로 + 모듈로 main.js 불러오기 -->
+    <script type="module" src="/js/main.js"></script>
+  </body>
 </html>

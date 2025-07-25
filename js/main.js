@@ -2,6 +2,7 @@ import { Paddle } from './paddle.js';
 import { Ball } from './ball.js';
 import { Block } from './block.js';
 import { Item, updateItems, activateItem, updateItemEffect } from './item.js';
+import { initPoseManager } from './poseManager.js';
 
 // 전역 상태 변수
 let paddle;
@@ -38,6 +39,16 @@ function initGame() {
 window.setup = function() {
   createCanvas(640, 480);
   initGame();
+
+  initPoseManager((poseInfo) => {
+    if (poseInfo.paddleAngle < -90 || poseInfo.paddleAngle > 90) return;
+
+
+    if(paddle){
+      paddle.applyPoseControl(poseInfo);
+    }
+  })
+
   if (restartBtn) {
     restartBtn.style.display = 'none';
     restartBtn.onclick = () => location.reload();
@@ -57,7 +68,7 @@ window.draw = function() {
   }
 
   ball.display();
-  paddle.update(activeItem);
+  //paddle.update(activeItem);
   paddle.display();
 
   for (let block of blocks) block.display();

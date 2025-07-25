@@ -4,12 +4,17 @@ export class Paddle {
     this.y = height - 40;
     this.w = 100;
     this.h = 15;
+    this.angle = 0;
   }
 
   display() {
+    push(); //회전 전 상태 저장
+    translate(this.x, this.y);
+    rotate(radians(this.angle));
     fill(255);
     rectMode(CENTER);
-    rect(this.x, this.y, this.w, this.h);
+    rect(0, 0, this.w, this.h);
+    pop();
   }
 
   update(activeItem) {
@@ -23,5 +28,23 @@ export class Paddle {
     if (activeItem === "penalty") dir *= -1;
     this.x += dir * speed;
     this.x = constrain(this.x, this.w / 2, width - this.w / 2);
+  }
+
+  applyPoseControl(poseInfo){
+    const minX = this.w / 2;
+    const maxX = width - this.w/2;
+
+
+    let centerRatio = 0.5;
+    let amplify = 1.5; // 1.0이면 그대로, 1.5면 더 민감하게
+
+    let offset = (poseInfo.noseRatio - centerRatio) * amplify;
+    offset = Math.max(-0.5, Math.min(0.5, offset)); // 안정성
+
+    let amplifiedRatio = centerRatio + offset;
+    this.x = minX + amplifiedRatio * (maxX - minX);
+    //this.x = minX + poseInfo.noseRatio * (maxX - minX);
+
+    this.angle = lerp(this.angle, poseInfo.paddleAngle, 0.2);
   }
 }

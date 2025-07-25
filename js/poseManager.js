@@ -1,9 +1,11 @@
-import * as tf from '@tensorflow/tfjs';
 import * as poseDetection from '@tensorflow-models/pose-detection';
+import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgl';
 
 let detector = null; //movenet 모델 인스턴스 
 let video = null;
+let prevNoseRatio = 0.5;
+let prevPaddleAngle = 0;
 
 
 function interpretPose(keypoints){
@@ -13,12 +15,13 @@ function interpretPose(keypoints){
     };
 
     // 좌우 위치
-     const nose = keypoints.find(k => k.name === "nose");
+    const nose = keypoints.find(k => k.name === "nose");
 
     if (nose && nose.score > 0.4) {
         // 코의 x 위치를 캔버스 너비 640 기준으로 정규화 (0~1)
         const normalized = Math.min(Math.max(nose.x / 640, 0), 1);
         result.noseRatio = 1 - normalized;
+        prevNoseRatio = result.noseRatio;
     }
 
     const leftEye = keypoints.find(k => k.name === "left_eye");
@@ -31,7 +34,10 @@ function interpretPose(keypoints){
         const angleRad = Math.atan2(dy, dx);
         const angleDeg = angleRad * (180 / Math.PI);
 
-        result.paddleAngle = -angleDeg; // -30도 ~ +30도 예상
+        result.paddleAngle = constrain(-angleDeg, -30, 30);
+        prevPaddleAngle = result.paddleAngle;
+    } else {
+        result.paddleAngle = prevPaddleAngle;
     }
 
     return result;
@@ -46,7 +52,6 @@ export async function initPoseManager(onPoseUpdate) {
   video.setAttribute('playsinline', '');
   video.width = 640;
   video.height = 480;
-  document.body.appendChild(video); // 테스트용, 이후 제거 가능
 
   // 1. 카메라 연결
   const stream = await navigator.mediaDevices.getUserMedia({
@@ -69,39 +74,12 @@ export async function initPoseManager(onPoseUpdate) {
 }
 
 async function detectLoop(onPoseUpdate) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 640;
-  canvas.height = 480;
-  document.body.appendChild(canvas); // 테스트용
-  const ctx = canvas.getContext('2d');
-
   async function frame() {
     const poses = await detector.estimatePoses(video);
 
-    ctx.save();
-    ctx.scale(-1, 1); // X축 좌우 반전
-    ctx.translate(-canvas.width, 0); // 반전된 이미지를 오른쪽으로 다시 이동
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    ctx.restore();
-
-
-
     if (poses.length > 0) {
       const keypoints = poses[0].keypoints;
-
-      // 테스트용 시각화
-      for (const kp of keypoints) {
-        if (kp.score > 0.3) {
-          ctx.beginPath();
-
-          const flippedX = canvas.width - kp.x;
-
-          ctx.arc(flippedX, kp.y, 5, 0, 2 * Math.PI);
-          ctx.fillStyle = 'blue';
-          ctx.fill();
-        }
-      }
-
+      
       // 이후 inputBridge로 전달할 정보
       if (onPoseUpdate) {
         const interpreted = interpretPose(keypoints);
