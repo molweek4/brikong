@@ -13,6 +13,7 @@ let itemTimerRef = { value: 0 };
 let score = 0;
 let gameOver = false;
 let gameState = "start"; // "start", "playing", "gameover"
+let myImg;
 
 let lastBlockAddTime = 0;
 let blockAddInterval = 8000; // 8초
@@ -84,6 +85,11 @@ window.addEventListener('DOMContentLoaded', () => {
 setTimeout(positionStartButton, 500);
 setTimeout(positionRestartButton, 500);
 
+window.preload = function() {
+  myImg = loadImage('../assets/images/img.png'); // 경로는 index.html 기준
+  // 예: 'assets/myimage.png' 또는 '../assets/myimage.png'
+};
+
 // p5.js 필수 함수: setup
 window.setup = function () {
   const canvas = createCanvas(640, 480);
@@ -131,7 +137,6 @@ Ball.prototype.checkCollision = function(blocks, activeItem) {
 window.draw = function () {
   background(0);
   console.log("draw", gameState);
-
   if (gameState === "start") {
     fill(255);
     textSize(48);
@@ -146,6 +151,11 @@ window.draw = function () {
   if (gameState === "playing") {
     if (startBtn) startBtn.style.display = 'none';
     if (restartBtn) restartBtn.style.display = 'none';
+    if (myImg) {
+      image(myImg, 0, 0, width, height); // 캔버스 전체에 꽉차게
+    } else {
+      background(0); // 이미지 없을 때 기본 배경
+    }
     // 공 업데이트 및 바닥에 닿았는지 검사
     if (ball.update(false, paddle)) {
       gameState = "gameover";
@@ -206,7 +216,9 @@ window.draw = function () {
 
   if (gameState === "gameover") {
     positionRestartButton();
-    fill(0, 0, 0, 180);
+    rectMode(CORNER);
+    fill(0, 0, 0, 200); // 또는 fill(0); for 완전 불투명
+    noStroke();
     rect(0, 0, width, height);
 
     // 텍스트
