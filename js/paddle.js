@@ -36,7 +36,7 @@ export class Paddle {
 
 
     let centerRatio = 0.5;
-    let amplify = 1.5; // 1.0이면 그대로, 1.5면 더 민감하게
+    let amplify = 2; // 1.0이면 그대로, 1.5면 더 민감하게
 
     let offset = (poseInfo.noseRatio - centerRatio) * amplify;
     offset = Math.max(-0.5, Math.min(0.5, offset)); // 안정성

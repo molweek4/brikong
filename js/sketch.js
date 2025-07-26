@@ -199,7 +199,7 @@ window.draw = function () {
 
     // 화면 요소 그리기
     ball.display();
-    paddle.update(activeItem);
+    //paddle.update(activeItem);
     paddle.display();
 
     for (let block of blocks) block.display();
