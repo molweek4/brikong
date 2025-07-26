@@ -1,7 +1,8 @@
-import { Paddle } from './paddle.js';
 import { Ball } from './ball.js';
 import { Block } from './block.js';
-import { Item, updateItems, updateItemEffect } from './item.js';
+import { Item, updateItemEffect, updateItems } from './item.js';
+import { Paddle } from './paddle.js';
+import { initPoseManager } from './poseManager.js';
 
 // 전역 변수
 let paddle;
@@ -95,6 +96,16 @@ window.setup = function () {
   const canvas = createCanvas(640, 480);
   canvas.parent('canvas-container');
   noLoop(); // 시작 전에 멈춤
+
+  initPoseManager((poseInfo) => {
+    if (poseInfo.paddleAngle < -90 || poseInfo.paddleAngle > 90) return;
+
+
+    if(paddle){
+      paddle.applyPoseControl(poseInfo);
+    }
+  })
+  
 
   if (restartBtn) {
     restartBtn.style.display = 'none';
