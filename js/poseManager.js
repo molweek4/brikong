@@ -17,11 +17,25 @@ function interpretPose(keypoints){
     // 좌우 위치
     const nose = keypoints.find(k => k.name === "nose");
 
-    if (nose && nose.score > 0.4) {
+    /*if (nose && nose.score > 0.4) {
         // 코의 x 위치를 캔버스 너비 640 기준으로 정규화 (0~1)
         const normalized = Math.min(Math.max(nose.x / 640, 0), 1);
         result.noseRatio = 1 - normalized;
         prevNoseRatio = result.noseRatio;
+    }*/
+
+    
+    if (nose && nose.score > 0.4) {
+        const normalized = Math.min(Math.max(nose.x / 640, 0), 1);
+        const rawNoseRatio = 1 - normalized;
+
+        // 📌 보간 처리: 이전 값과 새 값을 부드럽게 섞음
+        const smoothed = prevNoseRatio * (1 - 0.2) + rawNoseRatio * 0.2;
+        result.noseRatio = smoothed;
+        prevNoseRatio = smoothed;
+    } else {
+        // 추적 실패 시 이전 값 유지
+        result.noseRatio = prevNoseRatio;
     }
 
     const leftEye = keypoints.find(k => k.name === "left_eye");
