@@ -1,5 +1,4 @@
 const ITEM_TYPES = ["fire", "slow", "double", "penalty"];
-let items = [];
 let activeItem = null;
 let itemTimer = 0;
 
@@ -35,22 +34,8 @@ export class Item {
   }
 }
 
-export function activateItem(type) {
-  if (activeItem) return;
-  activeItem = type;
-  itemTimer = millis();
-
-  if (type === "slow") {
-    ball.dx *= 0.5;
-    ball.dy *= 0.5;
-  } else if (type === "penalty") {
-    paddle.w *= 0.5;
-  }
-
-  console.log("아이템 발동:", type);
-}
-
-export function updateItemEffect() {
+// 아이템 효과 적용 및 해제
+export function updateItemEffect(activeItem, itemTimer, ball, paddle, setActiveItem) {
   if (activeItem && millis() - itemTimer > 10000) {
     if (activeItem === "slow") {
       ball.dx *= 2;
@@ -58,23 +43,35 @@ export function updateItemEffect() {
     } else if (activeItem === "penalty") {
       paddle.w *= 2;
     }
-
-    activeItem = null;
+    setActiveItem(null);
   }
 }
 
-export function updateItems(ball) {
+// 아이템 획득 및 표시
+export function updateItems(ball, paddle, items, activeItem, setActiveItem, itemTimerRef) {
   for (let i = items.length - 1; i >= 0; i--) {
     let it = items[i];
     it.display();
-
     if (it.isCaught(ball)) {
-      if (!activeItem) {
-        activateItem(it.type);
-        items.splice(i, 1);
+      // 기존 효과 해제
+      if (activeItem) {
+        if (activeItem === "slow") {
+          ball.dx *= 2;
+          ball.dy *= 2;
+        } else if (activeItem === "penalty") {
+          paddle.w *= 2;
+        }
       }
+      // 새 효과 적용
+      if (it.type === "slow") {
+        ball.dx *= 0.5;
+        ball.dy *= 0.5;
+      } else if (it.type === "penalty") {
+        paddle.w *= 0.5;
+      }
+      setActiveItem(it.type);
+      itemTimerRef.value = millis();
+      items.splice(i, 1);
     }
   }
-
-  updateItemEffect();
 }

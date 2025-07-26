@@ -19,8 +19,8 @@ export class Paddle {
 
   /*update(activeItem) {
     // 키보드로 테스트 (←/→)
-    if (keyIsDown(LEFT_ARROW)) this.move(-1);
-    if (keyIsDown(RIGHT_ARROW)) this.move(1);
+    if (keyIsDown(LEFT_ARROW)) this.move(-2, activeItem);
+    if (keyIsDown(RIGHT_ARROW)) this.move(2, activeItem);
   }
 
   move(dir, activeItem) {

@@ -1,18 +1,27 @@
-<!-- index.html (루트 위치, Vite entry point) -->
+<!-- 전체 메인 페이지 -->
 <!DOCTYPE html>
-<html lang="ko">
+<html style="height:100%;">
   <head>
     <meta charset="utf-8" />
     <title>벽돌깨기 with Pose</title>
+    <link rel="stylesheet" href="../style/style.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script type="module" src="/js/sketch.js"></script>
   </head>
-  <body>
+
+  <body style="height:100vh; margin:0; position:relative;">
+    <div id="canvas-container"
+         style="display:flex; justify-content:center; align-items:center; height:100vh; width:100vw; position:relative;">
+      <!-- p5.js 캔버스가 여기에 들어감 -->
+    </div>
+    
+    <button id="startBtn"
+      style="display:block; position:absolute; font-size:24px; z-index:10;">
+      시작
+    </button>
     <button id="restartBtn"
-      style="display:none; position:absolute; left:50%; top:60%; transform:translate(-50%, -50%); font-size:24px;">
+      style="display:none; position:absolute; font-size:24px; z-index:10;">
       재시작
     </button>
-
-    <!-- Vite 방식: 절대 경로 + 모듈로 main.js 불러오기 -->
-    <script type="module" src="/js/main.js"></script>
   </body>
 </html>
