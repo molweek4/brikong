@@ -101,7 +101,7 @@ window.preload = function() {
   // 아이템 이미지들 로드
   itemImages.fire = loadImage('../assets/images/fire.gif');
   itemImages.slow = loadImage('../assets/images/slow.gif');
-  //itemImages.double = loadImage('../assets/images/double.gif');
+  itemImages.double = loadImage('../assets/images/double.gif');
   itemImages.penalty = loadImage('../assets/images/change.gif');
 };
 

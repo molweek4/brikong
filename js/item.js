@@ -7,7 +7,7 @@ export class Item {
     this.x = x;
     this.y = y;
     this.type = type;
-    this.size = 24;
+    this.size = 40;
     this.blinkPhase = random(0, TWO_PI);
   }
 

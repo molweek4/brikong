@@ -54,6 +54,7 @@ export class Ball {
 
       this.dx = newDx;
       this.dy = newDy;
+      this.y = paddle.y - paddle.h / 2 - this.r; 
     }
     return false;
   }
