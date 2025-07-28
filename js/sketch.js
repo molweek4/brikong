@@ -3,6 +3,8 @@ import { Block } from './block.js';
 import { Item, updateItemEffect, updateItems } from './item.js';
 import { Paddle } from './paddle.js';
 import { initPoseManager } from './poseManager.js';
+import { initSocket, getPlayerId, getOpponentPose, getOpponentBallPos, getInitialBlocks, onBlockUpdate, onBlockAdd, sendPaddleUpdate, sendBallPosition } from './socket.js';
+
 
 // 전역 변수
 let paddle;
@@ -19,12 +21,13 @@ let myImg;
 let lastBlockAddTime = 0;
 let blockAddInterval = 8000; // 8초
 
+let myBall;
 // 버튼
 const restartBtn = document.getElementById('restartBtn');
 const startBtn = document.getElementById('startBtn');
 
 // 블록 초기화
-function initBlocks() {
+/*function initBlocks() {
   blocks = [];
   const rows = 4;
   const cols = 8;
@@ -41,17 +44,40 @@ function initBlocks() {
       blocks.push(new Block(70 * c + 35, 40 * r + 40, hp));
     }
   }
+}*/
+
+function initBlocks(){
+  const raw = getInitialBlocks();
+  blocks = raw.map( b => new Block(b.x, b.y, b.hp));
 }
+
+
+onBlockUpdate((serverBlocks) => {
+  blocks = serverBlocks.map(b => new Block(b.x, b.y, b.hp));
+});
+
+onBlockAdd((newRow) => {
+  // 기존 블록들을 아래로 이동
+  for (let b of blocks) {
+    b.y += 40;
+  }
+
+  // 새 줄 추가
+  for (let b of newRow) {
+    blocks.push(new Block(b.x, b.y, b.hp));
+  }
+});
 
 // 게임 전체 초기화
 function initGame() {
   paddle = new Paddle();
-  ball = new Ball();
+  //ball = new Ball();
   initBlocks();
   items = [];
   activeItem = null;
   gameOver = false;
   gameState = "playing";
+  myBall = new Ball();
 }
 
 function positionStartButton() {
@@ -97,12 +123,16 @@ window.setup = function () {
   canvas.parent('canvas-container');
   noLoop(); // 시작 전에 멈춤
 
+  initSocket();
+
   initPoseManager((poseInfo) => {
     if (poseInfo.paddleAngle < -90 || poseInfo.paddleAngle > 90) return;
 
 
     if(paddle){
       paddle.applyPoseControl(poseInfo);
+
+      sendPaddleUpdate(paddle.x, paddle.angle);
     }
   })
   
@@ -168,14 +198,14 @@ window.draw = function () {
       background(0); // 이미지 없을 때 기본 배경
     }
     // 공 업데이트 및 바닥에 닿았는지 검사
-    if (ball.update(false, paddle)) {
+    if (myBall.update(false, paddle)) {
       gameState = "gameover";
       noLoop();
       if (restartBtn) restartBtn.style.display = 'block';
     }
 
     // 충돌 검사 및 블록/아이템 처리
-    const hitIdx = ball.checkCollision(blocks, activeItem);
+    const hitIdx = myBall.checkCollision(blocks, activeItem);
     if (hitIdx !== -1) {
       blocks[hitIdx].hp--;
       if (blocks[hitIdx].hp <= 0) {
@@ -194,21 +224,43 @@ window.draw = function () {
     }
 
     // 아이템 표시 및 획득 처리
-    updateItems(ball, paddle, items, activeItem, (type) => { activeItem = type; }, itemTimerRef);
-    updateItemEffect(activeItem, itemTimerRef.value, ball, paddle, (type) => { activeItem = type; });
+    updateItems(myBall, paddle, items, activeItem, (type) => { activeItem = type; }, itemTimerRef);
+    updateItemEffect(activeItem, itemTimerRef.value, myBall, paddle, (type) => { activeItem = type; });
 
     // 화면 요소 그리기
-    ball.display();
+    myBall.display();
     //paddle.update(activeItem);
     paddle.display();
 
+    if (frameCount % 2 === 0) {
+      sendBallPosition(myBall.x, myBall.y);
+    }
+
+    const opp = getOpponentPose();
+    const myId = getPlayerId();
+
+    if (opp && myId) {
+      // 상대방 Paddle만 렌더링
+      push();
+      translate(opp.x, paddle.y);
+      rotate(radians(opp.angle));
+      fill(255, 100, 100);
+      rectMode(CENTER);
+      rect(0, 0, paddle.w, paddle.h);
+      pop();
+    }
+
+    const oppBall = getOpponentBallPos();
+    fill(255, 100, 255); // 분홍색 공
+    ellipse(oppBall.x, oppBall.y, 20, 20);
+
     for (let block of blocks) block.display();
 
-    if (millis() - lastBlockAddTime > blockAddInterval) {
+    /*if (millis() - lastBlockAddTime > blockAddInterval) {
       moveBlocksDown();
       addBlockRow();
       lastBlockAddTime = millis();
-    }
+    }*/
 
     // draw() 내에서 score 표시
     fill(255);
@@ -244,6 +296,7 @@ window.draw = function () {
 
     if (restartBtn) restartBtn.style.display = 'block';
   }
+
 };
 
 function addBlockRow() {
