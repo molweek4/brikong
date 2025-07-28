@@ -4,23 +4,31 @@ export class Paddle {
     this.y = height - 40;
     this.w = 100;
     this.h = 15;
-    this.angle = 0;
+    this.animationFrame = 0;
+    this.frameCount = 0;
   }
 
-  display() {
-    push(); //회전 전 상태 저장
-    translate(this.x, this.y);
-    rotate(radians(this.angle));
-    fill(255);
-    rectMode(CENTER);
-    rect(0, 0, this.w, this.h);
-    pop();
+  display(characterImg) {
+    if (characterImg) {
+      // GIF 애니메이션은 자동으로 재생됨
+      imageMode(CENTER);
+      image(characterImg, this.x, this.y, 60, 60);
+      
+      // 패들을 캐릭터 중앙보다 조금 위에 그리기
+      fill(255);
+      rectMode(CENTER);
+      rect(this.x, this.y - 20, this.w, this.h);
+    } else {
+      // 기본 패들 (이미지가 없을 때)
+      fill(255);
+      rectMode(CENTER);
+      rect(this.x, this.y, this.w, this.h);
+    }
   }
 
-  /*update(activeItem) {
-    // 키보드로 테스트 (←/→)
-    if (keyIsDown(LEFT_ARROW)) this.move(-2, activeItem);
-    if (keyIsDown(RIGHT_ARROW)) this.move(2, activeItem);
+  update(activeItem) {
+    if (keyIsDown(LEFT_ARROW)) this.move(-1.5, activeItem);
+    if (keyIsDown(RIGHT_ARROW)) this.move(1.5, activeItem);
   }
 
   move(dir, activeItem) {
@@ -28,7 +36,7 @@ export class Paddle {
     if (activeItem === "penalty") dir *= -1;
     this.x += dir * speed;
     this.x = constrain(this.x, this.w / 2, width - this.w / 2);
-  }*/
+  }
 
   applyPoseControl(poseInfo){
     const minX = this.w / 2;

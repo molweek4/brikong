@@ -16,6 +16,8 @@ let gameOver = false;
 let gameState = "start"; // "start", "playing", "gameover"
 let myImg;
 let blockImg1, blockImg2, blockImg3; // 체력별 블록 이미지
+let characterImg;
+let itemImages = {}; // 아이템 이미지들
 
 let lastBlockAddTime = 0;
 let blockAddInterval = 8000; // 8초
@@ -88,12 +90,19 @@ setTimeout(positionStartButton, 500);
 setTimeout(positionRestartButton, 500);
 
 window.preload = function() {
-  myImg = loadImage('../assets/images/img.png'); // 경로는 index.html 기준
+  myImg = loadImage('../assets/images/bg.png'); // 경로는 index.html 기준
   // 예: 'assets/myimage.png' 또는 '../assets/myimage.png'
 
-  blockImg1 = loadImage('../assets/images/blue.png'); // hp=1
-  blockImg2 = loadImage('../assets/images/green.png'); // hp=2
-  blockImg3 = loadImage('../assets/images/red.png'); // hp=3
+  blockImg1 = loadImage('../assets/images/crack2.png'); // hp=1
+  blockImg2 = loadImage('../assets/images/crack1.png'); // hp=2
+  blockImg3 = loadImage('../assets/images/crack0.png'); // hp=3
+  characterImg = loadImage('../assets/images/character.gif');
+  
+  // 아이템 이미지들 로드
+  itemImages.fire = loadImage('../assets/images/fire.gif');
+  itemImages.slow = loadImage('../assets/images/slow.gif');
+  //itemImages.double = loadImage('../assets/images/double.gif');
+  itemImages.penalty = loadImage('../assets/images/change.gif');
 };
 
 // p5.js 필수 함수: setup
@@ -168,6 +177,7 @@ window.draw = function () {
     if (startBtn) startBtn.style.display = 'none';
     if (restartBtn) restartBtn.style.display = 'none';
     if (myImg) {
+      imageMode(CORNER);
       image(myImg, 0, 0, width, height); // 캔버스 전체에 꽉차게
     } else {
       background(0); // 이미지 없을 때 기본 배경
@@ -199,13 +209,13 @@ window.draw = function () {
     }
 
     // 아이템 표시 및 획득 처리
-    updateItems(ball, paddle, items, activeItem, (type) => { activeItem = type; }, itemTimerRef);
+    updateItems(ball, paddle, items, activeItem, (type) => { activeItem = type; }, itemTimerRef, itemImages);
     updateItemEffect(activeItem, itemTimerRef.value, ball, paddle, (type) => { activeItem = type; });
 
     // 화면 요소 그리기
     ball.display();
     //paddle.update(activeItem);
-    paddle.display();
+    paddle.display(characterImg);
 
     for (let block of blocks) block.display(blockImg1, blockImg2, blockImg3);
 

@@ -30,14 +30,9 @@ export class Block {
       rect(this.x, this.y, this.w, this.h, 8);
     }
 
-    // 체력 수치 텍스트
-    fill(0);
-    textSize(12);
-    textAlign(CENTER, CENTER);
-    text(this.hp, this.x + this.w / 2, this.y + this.h / 2 + 2);
-
     // 👀 눈 이모지 추가 (블럭 위에 표시)
+    textAlign(CENTER, CENTER);
     textSize(16);
-    text("👀", this.x + this.w / 2, this.y + this.h / 2 - 10);
+    text("👀", this.x, this.y + this.h / 2 - 10);
   }
 }

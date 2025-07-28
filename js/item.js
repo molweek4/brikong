@@ -11,12 +11,22 @@ export class Item {
     this.blinkPhase = random(0, TWO_PI);
   }
 
-  display() {
+  display(itemImages) {
     let alpha = map(sin(this.blinkPhase + millis() * 0.005), -1, 1, 100, 255);
-    fill(255, alpha);
-    textAlign(CENTER, CENTER);
-    textSize(this.size);
-    text(this.getEmoji(), this.x, this.y);
+    
+    // 이미지가 있으면 이미지 사용, 없으면 이모지 사용
+    if (itemImages && itemImages[this.type]) {
+      imageMode(CENTER);
+      tint(255, alpha);
+      image(itemImages[this.type], this.x, this.y, this.size, this.size);
+      noTint();
+    } else {
+      // 기본 이모지 표시
+      fill(255, alpha);
+      textAlign(CENTER, CENTER);
+      textSize(this.size);
+      text(this.getEmoji(), this.x, this.y);
+    }
   }
 
   getEmoji() {
@@ -48,10 +58,10 @@ export function updateItemEffect(activeItem, itemTimer, ball, paddle, setActiveI
 }
 
 // 아이템 획득 및 표시
-export function updateItems(ball, paddle, items, activeItem, setActiveItem, itemTimerRef) {
+export function updateItems(ball, paddle, items, activeItem, setActiveItem, itemTimerRef, itemImages) {
   for (let i = items.length - 1; i >= 0; i--) {
     let it = items[i];
-    it.display();
+    it.display(itemImages);
     if (it.isCaught(ball)) {
       // 기존 효과 해제
       if (activeItem) {
