@@ -79,8 +79,14 @@ wss.on('connection', (ws) => {
       }
         if (!roomId) {
           roomId = `room${roomCounter++}`;
-          rooms[roomId] = { players: [], colors: {}, usedColors: [] };
+          rooms[roomId] = { players: [], colors: {}, usedColors: [], items: [] };
         }
+        
+        // 기존 방에 items 배열이 없으면 초기화
+        if (!rooms[roomId].items) {
+          rooms[roomId].items = [];
+        }
+        
         rooms[roomId].players.push(ws);
         joinedRoom = roomId;
 

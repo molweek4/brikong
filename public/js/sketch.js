@@ -1,6 +1,6 @@
 import { Ball } from './ball.js';
 import { Block } from './block.js';
-import { Item, updateItemEffect, updateItems } from './item.js';
+import { Item, updateItemEffect, updateItems, getEmoji } from './item.js';
 import { Paddle } from './paddle.js';
 import { initPoseManager } from './poseManager.js';
 import { initSocket, getPlayerId, getOpponentPose, getOpponentBallPos, getInitialBlocks, onBlockUpdate, onBlockAdd, sendPaddleUpdate, sendBallPosition, sendPaddlePosition, sendBlockDestroyed, sendItemCollected, joinRoom } from './socket.js';
@@ -22,6 +22,7 @@ let lastBlockAddTime = 0;
 let blockAddInterval = 8000; // 8초
 
 let myBall;
+let itemImages = {}; // 아이템 이미지 저장용
 // 버튼
 const restartBtn = document.getElementById('restartBtn');
 const startBtn = document.getElementById('startBtn');
@@ -129,6 +130,12 @@ setTimeout(positionRestartButton, 500);
 window.preload = function() {
   myImg = loadImage('../assets/images/img.png'); // 경로는 index.html 기준
   // 예: 'assets/myimage.png' 또는 '../assets/myimage.png'
+  
+  // 아이템 이미지 로드
+  //itemImages.fire = loadImage('../assets/images/fire.gif');
+  //itemImages.slow = loadImage('../assets/images/slow.gif');
+  //itemImages.double = loadImage('../assets/images/double.gif');
+  //itemImages.penalty = loadImage('../assets/images/penalty.gif');
 };
 
 // p5.js 필수 함수: setup
@@ -277,9 +284,16 @@ window.draw = function () {
           type: itemData.type,
           size: itemData.size,
           display: function() {
-            if (itemImages && itemImages[this.type]) {
-              image(itemImages[this.type], this.x - this.size/2, this.y - this.size/2, this.size, this.size);
-            } else {
+            try {
+              if (itemImages && itemImages[this.type] && itemImages[this.type].width > 0) {
+                image(itemImages[this.type], this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+              } else {
+                fill(255);
+                textAlign(CENTER, CENTER);
+                text(getEmoji(this.type), this.x, this.y);
+              }
+            } catch (e) {
+              // 이미지 로드 실패 시 이모지 사용
               fill(255);
               textAlign(CENTER, CENTER);
               text(getEmoji(this.type), this.x, this.y);
