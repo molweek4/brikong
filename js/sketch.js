@@ -15,6 +15,7 @@ let score = 0;
 let gameOver = false;
 let gameState = "start"; // "start", "playing", "gameover"
 let myImg;
+let blockImg1, blockImg2, blockImg3; // 체력별 블록 이미지
 
 let lastBlockAddTime = 0;
 let blockAddInterval = 8000; // 8초
@@ -89,6 +90,10 @@ setTimeout(positionRestartButton, 500);
 window.preload = function() {
   myImg = loadImage('../assets/images/img.png'); // 경로는 index.html 기준
   // 예: 'assets/myimage.png' 또는 '../assets/myimage.png'
+
+  blockImg1 = loadImage('../assets/images/blue.png'); // hp=1
+  blockImg2 = loadImage('../assets/images/green.png'); // hp=2
+  blockImg3 = loadImage('../assets/images/red.png'); // hp=3
 };
 
 // p5.js 필수 함수: setup
@@ -199,10 +204,10 @@ window.draw = function () {
 
     // 화면 요소 그리기
     ball.display();
-    paddle.update(activeItem);
+    //paddle.update(activeItem);
     paddle.display();
 
-    for (let block of blocks) block.display();
+    for (let block of blocks) block.display(blockImg1, blockImg2, blockImg3);
 
     if (millis() - lastBlockAddTime > blockAddInterval) {
       moveBlocksDown();
