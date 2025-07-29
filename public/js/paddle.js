@@ -1,17 +1,18 @@
 export class Paddle {
-  constructor() {
+  constructor(color = "red") {
     this.x = width / 2;
     this.y = height - 40;
     this.w = 100;
     this.h = 15;
     this.angle = 0;
+    this.color = color;
   }
 
   display() {
     push(); //회전 전 상태 저장
     translate(this.x, this.y);
     rotate(radians(this.angle));
-    fill(255);
+    fill(this.color);
     rectMode(CENTER);
     rect(0, 0, this.w, this.h);
     pop();

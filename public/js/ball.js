@@ -1,5 +1,6 @@
 export class Ball {
-  constructor() {
+  constructor(color = "white") {
+    this.color = color;
     this.reset();
   }
 
@@ -7,8 +8,8 @@ export class Ball {
     this.x = width / 2;
     this.y = height / 2;
     this.r = 10;
-    this.dx = 4;
-    this.dy = -4;
+    this.dx = 2.5; // 속도 감소
+    this.dy = -2.5; // 속도 감소
   }
 
   update(isGameOver, paddle) {
@@ -60,7 +61,7 @@ export class Ball {
 
 
   display() {
-    fill(255);
+    fill(this.color);
     ellipse(this.x, this.y, this.r * 2);
   }
 

@@ -1,10 +1,10 @@
 import { Ball } from './ball.js';
 import { Block } from './block.js';
-import { Item, updateItemEffect, updateItems } from './item.js';
+import { getEmoji, Item, updateItemEffect, updateItems } from './item.js';
 import { Paddle } from './paddle.js';
-import { initPoseManager, initHandDetector } from './poseManager.js';
-import { initSocket,sendReady, getPlayerId, getOpponentPose, getOpponentBallPos, getInitialBlocks, onBlockUpdate, onBlockAdd, sendPaddleUpdate, sendBallPosition } from './socket.js';
 
+import { initHandDetector, initPoseManager } from './poseManager.js';
+import { getInitialBlocks, getOpponentBallPos, getOpponentPose, getPlayerId, initSocket, joinRoom, onBlockAdd, onBlockUpdate, sendBallPosition, sendBlockDestroyed, sendItemCollected, sendPaddlePosition, sendPaddleUpdate } from './socket.js';
 
 // 전역 변수
 let paddle;
@@ -15,7 +15,7 @@ let activeItem = null;
 let itemTimerRef = { value: 0 };
 let score = 0;
 let gameOver = false;
-let gameState = "start"; // "start", "playing", "gameover"
+let gameState = "start"; // "start", "waiting", "color_select", "playing", "gameover"
 let myImg;
 let blockImg1, blockImg2, blockImg3; // 체력별 블록 이미지
 
@@ -24,9 +24,16 @@ let blockAddInterval = 8000; // 8초
 
 let myBall;
 
+let itemImages = {}; // 아이템 이미지 저장용
 // 버튼
 const restartBtn = document.getElementById('restartBtn');
 const startBtn = document.getElementById('startBtn');
+
+let playerCount = 1; // 대기방 인원 표시용
+
+export function getPlayerCount() {
+  return playerCount;
+}
 
 // 블록 초기화
 /*function initBlocks() {
@@ -49,8 +56,14 @@ const startBtn = document.getElementById('startBtn');
 }*/
 
 function initBlocks(){
-  const raw = getInitialBlocks();
-  blocks = raw.map( b => new Block(b.x, b.y, b.hp));
+  // 서버에서 받은 블록 정보 사용
+  if (window.sharedBlocks) {
+    blocks = window.sharedBlocks.map(b => new Block(b.x, b.y, b.hp));
+  } else {
+    // 기존 방식 (단일 플레이어용)
+    const raw = getInitialBlocks();
+    blocks = raw.map(b => new Block(b.x, b.y, b.hp));
+  }
 }
 
 
@@ -78,15 +91,17 @@ onBlockAdd((newRow) => {
 
 // 게임 전체 초기화
 function initGame() {
-  paddle = new Paddle();
+  paddle = new Paddle(window.myPaddleColor || "red");
   //ball = new Ball();
   initBlocks();
   items = [];
   activeItem = null;
   gameOver = false;
   gameState = "playing";
-  myBall = new Ball();
+  myBall = new Ball(window.myPaddleColor || "white");
 }
+
+window.initGame = initGame;
 
 function positionStartButton() {
   const canvas = document.querySelector('#canvas-container canvas');
@@ -123,7 +138,6 @@ setTimeout(positionRestartButton, 500);
 window.preload = function() {
   myImg = loadImage('../assets/images/img.png'); // 경로는 index.html 기준
   // 예: 'assets/myimage.png' 또는 '../assets/myimage.png'
-
   blockImg1 = loadImage('../assets/images/blue.png'); // hp=1
   blockImg2 = loadImage('../assets/images/green.png'); // hp=2
   blockImg3 = loadImage('../assets/images/red.png'); // hp=3
@@ -132,6 +146,12 @@ window.preload = function() {
 window.startGameFromServer = function () {
   initGame();
   loop(); // draw 루프 시작
+  
+  // 아이템 이미지 로드
+  itemImages.fire = loadImage('../assets/images/fire.gif');
+  itemImages.slow = loadImage('../assets/images/slow.gif');
+  //itemImages.double = loadImage('../assets/images/double.gif');
+  itemImages.penalty = loadImage('../assets/images/change.gif');
 };
 
 // p5.js 필수 함수: setup
@@ -167,7 +187,10 @@ window.setup = function () {
   if (startBtn) {
     startBtn.onclick = () => {
       startBtn.style.display = 'none';
-      sendReady(); // 준비 신호 보내기
+      gameState = "waiting";
+      loop();
+      // 시작 버튼을 누를 때만 방에 입장
+      joinRoom();
     };
   }
 };
@@ -198,7 +221,7 @@ Ball.prototype.checkCollision = function(blocks, activeItem) {
 // p5.js 필수 함수: draw
 window.draw = function () {
   background(0);
-  console.log("draw", gameState);
+  console.log("draw 함수 실행, gameState:", window.gameState);
   if (gameState === "start") {
     fill(255);
     textSize(48);
@@ -210,7 +233,32 @@ window.draw = function () {
     return;
   }
 
-  if (gameState === "playing") {
+  if (window.gameState === "waiting") {
+    // 대기방 화면 그리기
+    background(0, 0, 0, 180);
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(32);
+    text("상대방을 기다리는 중입니다...", width/2, height/2);
+    textSize(20);
+    console.log("window.playerCount", window.playerCount);
+    text(`${window.playerCount || 1}/2 명 입장`, width/2, height/2 + 40);
+    noLoop(); // 대기 중에는 게임 루프 멈춤
+  }
+
+  if (window.gameState === "color_select") {
+    // 색상 선택 화면에서는 배경만 그리기 (텍스트 없음)
+    background(0, 0, 0, 180);
+    fill(255);
+    textAlign(CENTER, TOP);
+    textSize(32);
+    text("색상을 선택해주세요.", width/2, 60);
+    console.log("gameState", "color_select");
+    // 색상 선택 UI는 HTML에서 처리됨
+    noLoop();
+  }
+
+  if (window.gameState === "playing") {
     if (startBtn) startBtn.style.display = 'none';
     if (restartBtn) restartBtn.style.display = 'none';
     if (myImg) {
@@ -239,22 +287,107 @@ window.draw = function () {
             type
           ));
         }
+        // 서버에 블록 파괴 알림
+        sendBlockDestroyed(blocks[hitIdx].x, blocks[hitIdx].y);
+        
         blocks.splice(hitIdx, 1);
         score++; // 블록 제거 시 점수 증가
       }
     }
 
-    // 아이템 표시 및 획득 처리
-    updateItems(myBall, paddle, items, activeItem, (type) => { activeItem = type; }, itemTimerRef);
+    // 아이템 표시 및 획득 처리 (서버에서 받은 아이템 사용)
+    if (window.sharedItems) {
+      // 서버 아이템을 Item 객체로 변환
+      const serverItems = window.sharedItems.map(itemData => {
+        return {
+          x: itemData.x,
+          y: itemData.y,
+          type: itemData.type,
+          size: itemData.size,
+          display: function() {
+            try {
+              if (itemImages && itemImages[this.type] && itemImages[this.type].width > 0) {
+                push();
+                tint(255, map(sin(millis() * 0.005), -1, 1, 100, 255)); // 깜빡임 효과
+                image(itemImages[this.type], this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+                pop();
+              } else {
+                fill(255);
+                textAlign(CENTER, CENTER);
+                text(getEmoji(this.type), this.x, this.y);
+              }
+            } catch (e) {
+              // 이미지 로드 실패 시 이모지 사용
+              fill(255);
+              textAlign(CENTER, CENTER);
+              text(getEmoji(this.type), this.x, this.y);
+            }
+          }
+        };
+      });
+      
+      // 아이템 충돌 검사 및 획득
+      for (let i = serverItems.length - 1; i >= 0; i--) {
+        const item = serverItems[i];
+        if (myBall.x > item.x - item.size/2 && myBall.x < item.x + item.size/2 &&
+            myBall.y > item.y - item.size/2 && myBall.y < item.y + item.size/2) {
+          
+          // 아이템 획득 서버에 전송
+          sendItemCollected(item.x, item.y, item.type);
+          
+          // 자신이 획득한 아이템만 효과 적용
+          if (window.myCollectedItem && 
+              window.myCollectedItem.x === item.x && 
+              window.myCollectedItem.y === item.y && 
+              window.myCollectedItem.type === item.type) {
+            
+            // 아이템 효과 적용
+            activeItem = item.type;
+            clearTimeout(itemTimerRef.current);
+            itemTimerRef.current = setTimeout(() => {
+              activeItem = null;
+            }, 10000);
+            
+            // 효과 적용 후 초기화
+            window.myCollectedItem = null;
+          }
+        }
+      }
+      
+      // 아이템 표시
+      serverItems.forEach(item => item.display());
+    } else {
+      // 기존 방식 (단일 플레이어용)
+      updateItems(myBall, paddle, items, activeItem, (type) => { activeItem = type; }, itemTimerRef);
+    }
+    
     updateItemEffect(activeItem, itemTimerRef.value, myBall, paddle, (type) => { activeItem = type; });
 
     // 화면 요소 그리기
     myBall.display();
-    //paddle.update(activeItem);
     paddle.display();
 
+    // 상대방 패들 표시
+    if (window.opponentPaddle) {
+      push();
+      fill(window.opponentPaddle.color); // 상대방이 선택한 색상
+      rectMode(CENTER);
+      rect(window.opponentPaddle.x, paddle.y, paddle.w, paddle.h);
+      pop();
+    }
+
+    // 상대방 공 표시
+    if (window.opponentBall) {
+      push();
+      fill(window.opponentBall.color); // 상대방이 선택한 색상
+      ellipse(window.opponentBall.x, window.opponentBall.y, 20, 20);
+      pop();
+    }
+
+    // 위치 정보 서버로 전송
     if (frameCount % 2 === 0) {
       sendBallPosition(myBall.x, myBall.y);
+      sendPaddlePosition(paddle.x, paddle.angle);
     }
 
     const opp = getOpponentPose();

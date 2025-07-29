@@ -1,8 +1,6 @@
-import * as poseDetection from '@tensorflow-models/pose-detection';
-import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-backend-webgl';
 import * as HandPose from '@tensorflow-models/handpose';
 
+// CDN 방식으로 TensorFlow 사용
 let detector = null; //movenet 모델 인스턴스 
 let video = null;
 let prevNoseRatio = 0.5;
