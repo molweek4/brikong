@@ -21,32 +21,32 @@
     
     <button id="startBtn"
       style="display:block; position:absolute; font-size:24px; z-index:10;">
-      시작
+      START
     </button>
     <button id="restartBtn"
       style="display:none; position:absolute; font-size:24px; z-index:10;">
-      재시작
+      RESTART
     </button>
       <div id="color-select" style="display:none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; padding: 40px; border-radius: 15px; min-width: 400px;">
        
       
       <!-- 색상 선택 버튼들 -->
       <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 40px;">
-        <button data-color="red" style="width: 50px; height: 50px; top: 0px; background: red; border: 3px solid white; border-radius: 10px; cursor: pointer;" onclick="selectColor(this, 'red')"></button>
-        <button data-color="yellow" style="width: 50px; height: 50px; top: 70px; background: yellow; border: 3px solid white; border-radius: 10px; cursor: pointer;" onclick="selectColor(this, 'yellow')"></button>
-        <button data-color="green" style="width: 50px; height: 50px; top: 140px; background: green; border: 3px solid white; border-radius: 10px; cursor: pointer;" onclick="selectColor(this, 'green')"></button>
-        <button data-color="blue" style="width: 50px; height: 50px; top: 210px; background: blue; border: 3px solid white; border-radius: 10px; cursor: pointer;" onclick="selectColor(this, 'blue')"></button>
-        <button data-color="purple" style="width: 50px; height: 50px; top: 280px; background: purple; border: 3px solid white; border-radius: 10px; cursor: pointer;" onclick="selectColor(this, 'purple')"></button>
+        <button data-color="red" style="width: 50px; height: 50px; top: 0px; background: red; border: 2px solid white; border-radius: 10px; cursor: pointer;" onclick="selectColor(this, 'red')"></button>
+        <button data-color="yellow" style="width: 50px; height: 50px; top: 70px; background: yellow; border: 2px solid white; border-radius: 10px; cursor: pointer;" onclick="selectColor(this, 'yellow')"></button>
+        <button data-color="green" style="width: 50px; height: 50px; top: 140px; background: green; border: 2px solid white; border-radius: 10px; cursor: pointer;" onclick="selectColor(this, 'green')"></button>
+        <button data-color="blue" style="width: 50px; height: 50px; top: 210px; background: blue; border: 2px solid white; border-radius: 10px; cursor: pointer;" onclick="selectColor(this, 'blue')"></button>
+        <button data-color="purple" style="width: 50px; height: 50px; top: 280px; background: purple; border: 2px solid white; border-radius: 10px; cursor: pointer;" onclick="selectColor(this, 'purple')"></button>
       </div>
       
       <!-- 선택 상태 표시 -->
-      <div style="display: flex; justify-content: space-between; color: white; font-size: 18px; margin-bottom: 30px;">
+      <div style="display: flex; justify-content: space-between; color: #573016; font-family: 'mango'; font-weight: bold; font-size: 18px; margin-bottom: 30px;">
         <div style="text-align: center;">
-          <div style="margin-bottom: 15px;">내 선택:</div>
+          <div style="margin-bottom: 15px;">Me🎨</div>
           <div id="my-selection" style="width: 70px; height: 70px; border: 2px solid white; border-radius: 8px; background: gray; margin: 0 auto;"></div>
         </div>
         <div style="text-align: center;">
-          <div style="margin-bottom: 15px;">상대방 선택:</div>
+          <div style="margin-bottom: 15px;">Opponent🌟</div>
           <div id="opponent-selection" style="width: 70px; height: 70px; border: 2px solid white; border-radius: 8px; background: gray; margin: 0 auto;"></div>
         </div>
       </div>
@@ -69,7 +69,7 @@
       });
       
       // 클릭된 버튼의 테두리를 검은색으로 변경
-      button.style.border = '3px solid black';
+      button.style.border = '2px solid #374151';
       
       // 선택된 색상을 저장
       myColor = color;
