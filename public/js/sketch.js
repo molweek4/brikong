@@ -132,10 +132,10 @@ window.preload = function() {
   // 예: 'assets/myimage.png' 또는 '../assets/myimage.png'
   
   // 아이템 이미지 로드
-  //itemImages.fire = loadImage('../assets/images/fire.gif');
-  //itemImages.slow = loadImage('../assets/images/slow.gif');
+  itemImages.fire = loadImage('../assets/images/fire.gif');
+  itemImages.slow = loadImage('../assets/images/slow.gif');
   //itemImages.double = loadImage('../assets/images/double.gif');
-  //itemImages.penalty = loadImage('../assets/images/penalty.gif');
+  itemImages.penalty = loadImage('../assets/images/change.gif');
 };
 
 // p5.js 필수 함수: setup
@@ -286,7 +286,10 @@ window.draw = function () {
           display: function() {
             try {
               if (itemImages && itemImages[this.type] && itemImages[this.type].width > 0) {
+                push();
+                tint(255, map(sin(millis() * 0.005), -1, 1, 100, 255)); // 깜빡임 효과
                 image(itemImages[this.type], this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+                pop();
               } else {
                 fill(255);
                 textAlign(CENTER, CENTER);
@@ -311,12 +314,22 @@ window.draw = function () {
           // 아이템 획득 서버에 전송
           sendItemCollected(item.x, item.y, item.type);
           
-          // 아이템 효과 적용
-          activeItem = item.type;
-          clearTimeout(itemTimerRef.current);
-          itemTimerRef.current = setTimeout(() => {
-            activeItem = null;
-          }, 10000);
+          // 자신이 획득한 아이템만 효과 적용
+          if (window.myCollectedItem && 
+              window.myCollectedItem.x === item.x && 
+              window.myCollectedItem.y === item.y && 
+              window.myCollectedItem.type === item.type) {
+            
+            // 아이템 효과 적용
+            activeItem = item.type;
+            clearTimeout(itemTimerRef.current);
+            itemTimerRef.current = setTimeout(() => {
+              activeItem = null;
+            }, 10000);
+            
+            // 효과 적용 후 초기화
+            window.myCollectedItem = null;
+          }
         }
       }
       

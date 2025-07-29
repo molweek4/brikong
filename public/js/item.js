@@ -23,11 +23,14 @@ export class Item {
   }
 
   display(itemImages) {
-    if (itemImages && itemImages[this.type]) {
+    if (itemImages && itemImages[this.type] && itemImages[this.type].width > 0) {
       // GIF 이미지가 있으면 사용
+      push();
+      tint(255, map(sin(this.blinkPhase + millis() * 0.005), -1, 1, 100, 255)); // 깜빡임 효과
       image(itemImages[this.type], this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+      pop();
     } else {
-      // 이모지 사용
+      // 이모지 사용 (이미지가 없을 때만)
       let alpha = map(sin(this.blinkPhase + millis() * 0.005), -1, 1, 100, 255);
       fill(255, alpha);
       textAlign(CENTER, CENTER);
@@ -48,7 +51,7 @@ export function updateItemEffect(activeItem, itemTimer, ball, paddle, setActiveI
       ball.dx *= 2;
       ball.dy *= 2;
     } else if (activeItem === "penalty") {
-      paddle.w *= 2;
+      paddle.w /= 0.5; // penalty 효과 해제: 패들 크기 원래대로
     }
     setActiveItem(null);
   }
@@ -66,7 +69,7 @@ export function updateItems(ball, paddle, items, activeItem, setActiveItem, item
           ball.dx *= 2;
           ball.dy *= 2;
         } else if (activeItem === "penalty") {
-          paddle.w *= 2;
+          paddle.w /= 0.5; // penalty 효과 해제: 패들 크기 원래대로
         }
       }
       // 새 효과 적용
@@ -74,7 +77,7 @@ export function updateItems(ball, paddle, items, activeItem, setActiveItem, item
         ball.dx *= 0.5;
         ball.dy *= 0.5;
       } else if (it.type === "penalty") {
-        paddle.w *= 0.5;
+        paddle.w *= 0.5; // penalty: 패들 크기 감소
       }
       setActiveItem(it.type);
       itemTimerRef.value = millis();

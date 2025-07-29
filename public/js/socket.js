@@ -53,6 +53,8 @@ export function initSocket() {
 
   socket.onopen = () => {
     console.log("✅ WebSocket 연결됨");
+    // 플레이어 ID 생성 및 저장
+    window.myPlayerId = Math.random().toString(36).substr(2, 9);
     // 여기서 바로 joinRoom을 보내지 않음
   };
 
@@ -177,6 +179,11 @@ export function initSocket() {
         window.sharedItems = window.sharedItems.filter(item => 
           !(item.x === msg.item.x && item.y === msg.item.y && item.type === msg.item.type)
         );
+      }
+      
+      // 자신이 획득한 아이템인지 확인
+      if (msg.collectedBy === window.myPlayerId) {
+        window.myCollectedItem = msg.item;
       }
     }
   };
