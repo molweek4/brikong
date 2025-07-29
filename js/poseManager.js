@@ -29,7 +29,7 @@ function interpretPose(keypoints){
         const normalized = Math.min(Math.max(nose.x / 640, 0), 1);
         const rawNoseRatio = 1 - normalized;
 
-        // 📌 보간 처리: 이전 값과 새 값을 부드럽게 섞음
+        // 보간 처리: 이전 값과 새 값을 부드럽게 섞음
         const smoothed = prevNoseRatio * (1 - 0.2) + rawNoseRatio * 0.2;
         result.noseRatio = smoothed;
         prevNoseRatio = smoothed;
