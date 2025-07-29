@@ -1,11 +1,14 @@
 import * as poseDetection from '@tensorflow-models/pose-detection';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgl';
+import * as HandPose from '@tensorflow-models/handpose';
 
 let detector = null; //movenet 모델 인스턴스 
 let video = null;
 let prevNoseRatio = 0.5;
 let prevPaddleAngle = 0;
+
+let handDetector = null;
 
 
 function interpretPose(keypoints){
@@ -29,7 +32,7 @@ function interpretPose(keypoints){
         const normalized = Math.min(Math.max(nose.x / 640, 0), 1);
         const rawNoseRatio = 1 - normalized;
 
-        // 보간 처리: 이전 값과 새 값을 부드럽게 섞음
+        //  보간 처리: 이전 값과 새 값을 부드럽게 섞음
         const smoothed = prevNoseRatio * (1 - 0.2) + rawNoseRatio * 0.2;
         result.noseRatio = smoothed;
         prevNoseRatio = smoothed;
@@ -87,6 +90,50 @@ export async function initPoseManager(onPoseUpdate) {
   detectLoop(onPoseUpdate);
 }
 
+
+export async function initHandDetector(onUltimate) {
+  await tf.setBackend('webgl'); // GPU 사용
+
+  video = document.createElement('video');
+  video.setAttribute('autoplay', '');
+  video.setAttribute('muted', '');
+  video.setAttribute('playsinline', '');
+  video.width = 640;
+  video.height = 480;
+
+  // 1. 카메라 연결
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { width: 640, height: 480 },
+    audio: false
+  });
+  video.srcObject = stream;
+  await video.play();
+
+  handDetector = await HandPose.load();
+
+  detectHandLoop(onUltimate);
+}
+
+function isVGesture(predictions){
+  if(predictions.length === 0)return false;
+
+  const landmarks = predictions[0].landmarks;
+
+  const indexTip = landmarks[8];
+  const middleTip = landmarks[12];
+  const ringTip = landmarks[16];
+  const pinkyTip = landmarks[20];
+
+  const indexMiddleDist = Math.hypot(
+    indexTip[0] - middleTip[0],
+    indexTip[1] - middleTip[1]
+  )
+
+  return indexMiddleDist > 50 &&
+         ringTip[1] > indexTip[1] &&
+         pinkyTip[1] > middleTip[1];
+}
+
 async function detectLoop(onPoseUpdate) {
   async function frame() {
     const poses = await detector.estimatePoses(video);
@@ -99,6 +146,20 @@ async function detectLoop(onPoseUpdate) {
         const interpreted = interpretPose(keypoints);
         onPoseUpdate(interpreted);
       }
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  frame();
+}
+
+async function detectHandLoop(onUltimate) {
+  async function frame() {
+    const predictions = await handDetector.estimateHands(video);
+
+    if (isVGesture(predictions) && onUltimate) {
+      onUltimate();
     }
 
     requestAnimationFrame(frame);

@@ -2,7 +2,7 @@ import { Ball } from './ball.js';
 import { Block } from './block.js';
 import { Item, updateItemEffect, updateItems } from './item.js';
 import { Paddle } from './paddle.js';
-import { initPoseManager } from './poseManager.js';
+import { initPoseManager, initHandDetector } from './poseManager.js';
 import { initSocket,sendReady, getPlayerId, getOpponentPose, getOpponentBallPos, getInitialBlocks, onBlockUpdate, onBlockAdd, sendPaddleUpdate, sendBallPosition } from './socket.js';
 
 
@@ -51,6 +51,12 @@ const startBtn = document.getElementById('startBtn');
 function initBlocks(){
   const raw = getInitialBlocks();
   blocks = raw.map( b => new Block(b.x, b.y, b.hp));
+}
+
+
+function triggerUltimateSkill() {
+  console.log("🚀 궁극기 발동!");
+  // 여기에 게임 속 로직 추가 (예: 블록 파괴, 점수 증가 등)
 }
 
 
@@ -149,6 +155,7 @@ window.setup = function () {
     sendPaddleUpdate(paddle.x, paddle.angle);
   })
   
+  initHandDetector(triggerUltimateSkill);
 
   if (restartBtn) {
     restartBtn.onclick = () => {
