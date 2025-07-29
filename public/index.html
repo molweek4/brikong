@@ -1,0 +1,114 @@
+<!-- 전체 메인 페이지 -->
+<!DOCTYPE html>
+<html style="height:100%;">
+  <head>
+    <meta charset="utf-8" />
+    <title>벽돌깨기 with Pose</title>
+    <link rel="stylesheet" href="../style/style.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@latest"></script>
+    <script type="module" src="/js/sketch.js"></script>
+  </head>
+
+  <body style="height:100vh; margin:0; position:relative;">
+    <div id="canvas-container"
+         style="display:flex; justify-content:center; align-items:center; height:100vh; width:100vw; position:relative;">
+      <!-- p5.js 캔버스가 여기에 들어감 -->
+    </div>
+    
+    <button id="startBtn"
+      style="display:block; position:absolute; font-size:24px; z-index:10;">
+      시작
+    </button>
+    <button id="restartBtn"
+      style="display:none; position:absolute; font-size:24px; z-index:10;">
+      재시작
+    </button>
+      <div id="color-select" style="display:none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; padding: 40px; border-radius: 15px; min-width: 400px;">
+       
+      
+      <!-- 색상 선택 버튼들 -->
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 40px;">
+        <button data-color="red" style="width: 50px; height: 50px; top: 0px; background: red; border: 3px solid white; border-radius: 10px; cursor: pointer;" onclick="selectColor(this, 'red')"></button>
+        <button data-color="yellow" style="width: 50px; height: 50px; top: 70px; background: yellow; border: 3px solid white; border-radius: 10px; cursor: pointer;" onclick="selectColor(this, 'yellow')"></button>
+        <button data-color="green" style="width: 50px; height: 50px; top: 140px; background: green; border: 3px solid white; border-radius: 10px; cursor: pointer;" onclick="selectColor(this, 'green')"></button>
+        <button data-color="blue" style="width: 50px; height: 50px; top: 210px; background: blue; border: 3px solid white; border-radius: 10px; cursor: pointer;" onclick="selectColor(this, 'blue')"></button>
+        <button data-color="purple" style="width: 50px; height: 50px; top: 280px; background: purple; border: 3px solid white; border-radius: 10px; cursor: pointer;" onclick="selectColor(this, 'purple')"></button>
+      </div>
+      
+      <!-- 선택 상태 표시 -->
+      <div style="display: flex; justify-content: space-between; color: white; font-size: 18px; margin-bottom: 30px;">
+        <div style="text-align: center;">
+          <div style="margin-bottom: 15px;">내 선택:</div>
+          <div id="my-selection" style="width: 70px; height: 70px; border: 2px solid white; border-radius: 8px; background: gray; margin: 0 auto;"></div>
+        </div>
+        <div style="text-align: center;">
+          <div style="margin-bottom: 15px;">상대방 선택:</div>
+          <div id="opponent-selection" style="width: 70px; height: 70px; border: 2px solid white; border-radius: 8px; background: gray; margin: 0 auto;"></div>
+        </div>
+      </div>
+      
+      <!-- 게임 시작 버튼 (처음에는 숨김) -->
+      <div id="start-game-btn" style="display: none; text-align: center;">
+        <button onclick="startGame()" style="padding: 15px 30px; font-size: 20px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer;">게임 시작!</button>
+      </div>
+    </div>
+  
+  <script>
+    let myColor = null;
+    let opponentColor = null;
+    
+    function selectColor(button, color) {
+      // 모든 버튼의 테두리를 흰색으로 초기화
+      const allButtons = document.querySelectorAll('[data-color]');
+      allButtons.forEach(btn => {
+        btn.style.border = '3px solid white';
+      });
+      
+      // 클릭된 버튼의 테두리를 검은색으로 변경
+      button.style.border = '3px solid black';
+      
+      // 선택된 색상을 저장
+      myColor = color;
+      window.myPaddleColor = color;
+      
+      // 내 선택 표시 업데이트
+      updateMySelection(color);
+      
+      // 서버에 색상 선택 메시지 전송
+      if (window.socket && window.socket.readyState === WebSocket.OPEN) {
+        window.socket.send(JSON.stringify({ type: "select_color", color: color }));
+      }
+    }
+    
+    function updateMySelection(color) {
+      const mySelection = document.getElementById('my-selection');
+      mySelection.style.background = color;
+    }
+    
+    function updateOpponentSelection(color) {
+      const opponentSelection = document.getElementById('opponent-selection');
+      opponentSelection.style.background = color;
+    }
+    
+    function showStartButton() {
+      const startBtn = document.getElementById('start-game-btn');
+      startBtn.style.display = 'block';
+    }
+    
+    function startGame() {
+      // 게임 시작 메시지 전송
+      if (window.socket && window.socket.readyState === WebSocket.OPEN) {
+        window.socket.send(JSON.stringify({ type: "ready_to_start" }));
+        console.log("게임 시작 버튼 클릭됨");
+      }
+    }
+    
+    // 전역 함수로 설정 (socket.js에서 접근 가능)
+    window.updateMySelection = updateMySelection;
+    window.updateOpponentSelection = updateOpponentSelection;
+    window.showStartButton = showStartButton;
+  </script>
+  </body>
+</html>
