@@ -3,7 +3,7 @@ import { Block } from './block.js';
 import { Item, updateItemEffect, updateItems } from './item.js';
 import { Paddle } from './paddle.js';
 import { initPoseManager } from './poseManager.js';
-import { initSocket, getPlayerId, getOpponentPose, getOpponentBallPos, getInitialBlocks, onBlockUpdate, onBlockAdd, sendPaddleUpdate, sendBallPosition } from './socket.js';
+import { initSocket,sendReady, getPlayerId, getOpponentPose, getOpponentBallPos, getInitialBlocks, onBlockUpdate, onBlockAdd, sendPaddleUpdate, sendBallPosition } from './socket.js';
 
 
 // 전역 변수
@@ -22,6 +22,7 @@ let lastBlockAddTime = 0;
 let blockAddInterval = 8000; // 8초
 
 let myBall;
+
 // 버튼
 const restartBtn = document.getElementById('restartBtn');
 const startBtn = document.getElementById('startBtn');
@@ -117,6 +118,11 @@ window.preload = function() {
   // 예: 'assets/myimage.png' 또는 '../assets/myimage.png'
 };
 
+window.startGameFromServer = function () {
+  initGame();
+  loop(); // draw 루프 시작
+};
+
 // p5.js 필수 함수: setup
 window.setup = function () {
   const canvas = createCanvas(640, 480);
@@ -126,27 +132,30 @@ window.setup = function () {
   initSocket();
 
   initPoseManager((poseInfo) => {
+    //console.log("Pose detected", poseInfo);
     if (poseInfo.paddleAngle < -90 || poseInfo.paddleAngle > 90) return;
 
 
-    if(paddle){
-      paddle.applyPoseControl(poseInfo);
-
-      sendPaddleUpdate(paddle.x, paddle.angle);
+    if (!paddle) {
+      paddle = new Paddle(); // Paddle이 없으면 즉시 생성
     }
+    paddle.applyPoseControl(poseInfo);
+
+    sendPaddleUpdate(paddle.x, paddle.angle);
   })
   
 
   if (restartBtn) {
-    restartBtn.style.display = 'none';
-    restartBtn.onclick = () => location.reload();
+    restartBtn.onclick = () => {
+      restartBtn.style.display = 'none';
+      sendReady();  // 새 준비 신호 전송
+    }
   }
 
   if (startBtn) {
     startBtn.onclick = () => {
       startBtn.style.display = 'none';
-      initGame();
-      loop(); // draw 루프 시작
+      sendReady(); // 준비 신호 보내기
     };
   }
 };

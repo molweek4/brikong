@@ -10,6 +10,15 @@ export function getSocket() {
   return socket;
 }
 
+export function sendReady() {
+  if (socket && playerId) {
+    socket.send(JSON.stringify({
+      type: 'player_ready',
+      playerId
+    }));
+  }
+}
+
 //상대방 패들 위치 
 export function getOpponentPose() {
   return opponentPose;
@@ -46,7 +55,7 @@ export function initSocket() {
   socket = new WebSocket("ws://localhost:8080");
 
   socket.onopen = () => {
-    console.log("✅ WebSocket 연결됨");
+    console.log("WebSocket 연결됨");
   };
 
   socket.onmessage = (e) => {
@@ -69,10 +78,10 @@ export function initSocket() {
       initialBlocks = msg.blocks;
 
       // blocks 초기화 이후 initGame 호출
-     if (typeof window.initGame === 'function') {
+     /*if (typeof window.initGame === 'function') {
         window.initGame();
         loop();
-     }
+     }*/
     }
 
     if (msg.type === "blocks_update" && onBlockUpdateCallback) {
@@ -81,6 +90,12 @@ export function initSocket() {
 
     if (msg.type === "block_add" && onBlockAddCallback) {
         onBlockAddCallback(msg.newRow);
+    }
+
+    if (msg.type === 'start_game') {
+        if (typeof window.startGameFromServer === 'function') {
+            window.startGameFromServer();
+        }
     }
   };
 }
