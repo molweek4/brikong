@@ -1,5 +1,3 @@
-import * as HandPose from '@tensorflow-models/handpose';
-
 // CDN 방식으로 TensorFlow 사용
 let detector = null; //movenet 모델 인스턴스 
 let video = null;
@@ -59,22 +57,23 @@ function interpretPose(keypoints){
 }
 
 export async function initPoseManager(onPoseUpdate) {
-  await tf.setBackend('webgl'); // GPU 사용
+  await tf.setBackend('webgl');
+  
+  if (!video) {
+    video = document.createElement('video');
+    video.autoplay = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.width = 640;
+    video.height = 480;
 
-  video = document.createElement('video');
-  video.setAttribute('autoplay', '');
-  video.setAttribute('muted', '');
-  video.setAttribute('playsinline', '');
-  video.width = 640;
-  video.height = 480;
-
-  // 1. 카메라 연결
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: { width: 640, height: 480 },
-    audio: false
-  });
-  video.srcObject = stream;
-  await video.play();
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 480 },
+      audio: false
+    });
+    video.srcObject = stream;
+    await video.play();
+  }
 
   // 2. MoveNet 모델 로딩
   detector = await poseDetection.createDetector(
@@ -90,24 +89,10 @@ export async function initPoseManager(onPoseUpdate) {
 
 
 export async function initHandDetector(onUltimate) {
-  await tf.setBackend('webgl'); // GPU 사용
-
-  video = document.createElement('video');
-  video.setAttribute('autoplay', '');
-  video.setAttribute('muted', '');
-  video.setAttribute('playsinline', '');
-  video.width = 640;
-  video.height = 480;
-
-  // 1. 카메라 연결
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: { width: 640, height: 480 },
-    audio: false
-  });
-  video.srcObject = stream;
-  await video.play();
-
-  handDetector = await HandPose.load();
+  if (!video) {
+    throw new Error("PoseManager must be initialized first");
+  }
+  handDetector = await handpose.load();
 
   detectHandLoop(onUltimate);
 }

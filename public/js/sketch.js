@@ -370,9 +370,12 @@ window.draw = function () {
     // 상대방 패들 표시
     if (window.opponentPaddle) {
       push();
+      translate(opponentPaddle.x, paddle.y);
+      rotate(radians(opponentPaddle.angle));
       fill(window.opponentPaddle.color); // 상대방이 선택한 색상
+  
       rectMode(CENTER);
-      rect(window.opponentPaddle.x, paddle.y, paddle.w, paddle.h);
+      rect(0, 0, paddle.w, paddle.h);
       pop();
     }
 
@@ -390,7 +393,7 @@ window.draw = function () {
       sendPaddlePosition(paddle.x, paddle.angle);
     }
 
-    const opp = getOpponentPose();
+    /*const opp = getOpponentPose();
     const myId = getPlayerId();
 
     if (opp && myId) {
@@ -402,11 +405,11 @@ window.draw = function () {
       rectMode(CENTER);
       rect(0, 0, paddle.w, paddle.h);
       pop();
-    }
+    }*/
 
-    const oppBall = getOpponentBallPos();
+    /*const oppBall = getOpponentBallPos();
     fill(255, 100, 255); // 분홍색 공
-    ellipse(oppBall.x, oppBall.y, 20, 20);
+    ellipse(oppBall.x, oppBall.y, 20, 20);*/
 
     for (let block of blocks) block.display(blockImg1, blockImg2, blockImg3);
 
