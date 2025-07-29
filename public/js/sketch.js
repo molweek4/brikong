@@ -1,14 +1,10 @@
 import { Ball } from './ball.js';
 import { Block } from './block.js';
-import { Item, updateItemEffect, updateItems, getEmoji } from './item.js';
+import { getEmoji, Item, updateItemEffect, updateItems } from './item.js';
 import { Paddle } from './paddle.js';
-import { initPoseManager } from './poseManager.js';
-<<<<<<< HEAD:js/sketch.js
-import { initSocket,sendReady, getPlayerId, getOpponentPose, getOpponentBallPos, getInitialBlocks, onBlockUpdate, onBlockAdd, sendPaddleUpdate, sendBallPosition } from './socket.js';
-=======
-import { initSocket, getPlayerId, getOpponentPose, getOpponentBallPos, getInitialBlocks, onBlockUpdate, onBlockAdd, sendPaddleUpdate, sendBallPosition, sendPaddlePosition, sendBlockDestroyed, sendItemCollected, joinRoom } from './socket.js';
->>>>>>> newbranch:public/js/sketch.js
 
+import { initHandDetector, initPoseManager } from './poseManager.js';
+import { getInitialBlocks, getOpponentBallPos, getOpponentPose, getPlayerId, initSocket, joinRoom, onBlockAdd, onBlockUpdate, sendBallPosition, sendBlockDestroyed, sendItemCollected, sendPaddlePosition, sendPaddleUpdate } from './socket.js';
 
 // 전역 변수
 let paddle;
@@ -27,11 +23,8 @@ let lastBlockAddTime = 0;
 let blockAddInterval = 8000; // 8초
 
 let myBall;
-<<<<<<< HEAD:js/sketch.js
 
-=======
 let itemImages = {}; // 아이템 이미지 저장용
->>>>>>> newbranch:public/js/sketch.js
 // 버튼
 const restartBtn = document.getElementById('restartBtn');
 const startBtn = document.getElementById('startBtn');
@@ -71,6 +64,12 @@ function initBlocks(){
     const raw = getInitialBlocks();
     blocks = raw.map(b => new Block(b.x, b.y, b.hp));
   }
+}
+
+
+function triggerUltimateSkill() {
+  console.log("🚀 궁극기 발동!");
+  // 여기에 게임 속 로직 추가 (예: 블록 파괴, 점수 증가 등)
 }
 
 
@@ -139,8 +138,6 @@ setTimeout(positionRestartButton, 500);
 window.preload = function() {
   myImg = loadImage('../assets/images/img.png'); // 경로는 index.html 기준
   // 예: 'assets/myimage.png' 또는 '../assets/myimage.png'
-<<<<<<< HEAD:js/sketch.js
-
   blockImg1 = loadImage('../assets/images/blue.png'); // hp=1
   blockImg2 = loadImage('../assets/images/green.png'); // hp=2
   blockImg3 = loadImage('../assets/images/red.png'); // hp=3
@@ -149,14 +146,12 @@ window.preload = function() {
 window.startGameFromServer = function () {
   initGame();
   loop(); // draw 루프 시작
-=======
   
   // 아이템 이미지 로드
   itemImages.fire = loadImage('../assets/images/fire.gif');
   itemImages.slow = loadImage('../assets/images/slow.gif');
   //itemImages.double = loadImage('../assets/images/double.gif');
   itemImages.penalty = loadImage('../assets/images/change.gif');
->>>>>>> newbranch:public/js/sketch.js
 };
 
 // p5.js 필수 함수: setup
@@ -180,6 +175,7 @@ window.setup = function () {
     sendPaddleUpdate(paddle.x, paddle.angle);
   })
   
+  initHandDetector(triggerUltimateSkill);
 
   if (restartBtn) {
     restartBtn.onclick = () => {
@@ -191,14 +187,10 @@ window.setup = function () {
   if (startBtn) {
     startBtn.onclick = () => {
       startBtn.style.display = 'none';
-<<<<<<< HEAD:js/sketch.js
-      sendReady(); // 준비 신호 보내기
-=======
       gameState = "waiting";
       loop();
       // 시작 버튼을 누를 때만 방에 입장
       joinRoom();
->>>>>>> newbranch:public/js/sketch.js
     };
   }
 };
@@ -378,9 +370,12 @@ window.draw = function () {
     // 상대방 패들 표시
     if (window.opponentPaddle) {
       push();
+      translate(opponentPaddle.x, paddle.y);
+      rotate(radians(opponentPaddle.angle));
       fill(window.opponentPaddle.color); // 상대방이 선택한 색상
+  
       rectMode(CENTER);
-      rect(window.opponentPaddle.x, paddle.y, paddle.w, paddle.h);
+      rect(0, 0, paddle.w, paddle.h);
       pop();
     }
 
@@ -398,7 +393,7 @@ window.draw = function () {
       sendPaddlePosition(paddle.x, paddle.angle);
     }
 
-    const opp = getOpponentPose();
+    /*const opp = getOpponentPose();
     const myId = getPlayerId();
 
     if (opp && myId) {
@@ -410,11 +405,11 @@ window.draw = function () {
       rectMode(CENTER);
       rect(0, 0, paddle.w, paddle.h);
       pop();
-    }
+    }*/
 
-    const oppBall = getOpponentBallPos();
+    /*const oppBall = getOpponentBallPos();
     fill(255, 100, 255); // 분홍색 공
-    ellipse(oppBall.x, oppBall.y, 20, 20);
+    ellipse(oppBall.x, oppBall.y, 20, 20);*/
 
     for (let block of blocks) block.display(blockImg1, blockImg2, blockImg3);
 

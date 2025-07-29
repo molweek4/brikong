@@ -3,8 +3,9 @@ let detector = null; //movenet 모델 인스턴스
 let video = null;
 let prevNoseRatio = 0.5;
 let prevPaddleAngle = 0;
-const poseDetection = window.poseDetection;
-const tf = window.tf;
+
+let handDetector = null;
+
 
 function interpretPose(keypoints){
     const result = {
@@ -27,7 +28,7 @@ function interpretPose(keypoints){
         const normalized = Math.min(Math.max(nose.x / 640, 0), 1);
         const rawNoseRatio = 1 - normalized;
 
-        // 보간 처리: 이전 값과 새 값을 부드럽게 섞음
+        //  보간 처리: 이전 값과 새 값을 부드럽게 섞음
         const smoothed = prevNoseRatio * (1 - 0.2) + rawNoseRatio * 0.2;
         result.noseRatio = smoothed;
         prevNoseRatio = smoothed;
@@ -56,22 +57,23 @@ function interpretPose(keypoints){
 }
 
 export async function initPoseManager(onPoseUpdate) {
-  await tf.setBackend('webgl'); // GPU 사용
+  await tf.setBackend('webgl');
+  
+  if (!video) {
+    video = document.createElement('video');
+    video.autoplay = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.width = 640;
+    video.height = 480;
 
-  video = document.createElement('video');
-  video.setAttribute('autoplay', '');
-  video.setAttribute('muted', '');
-  video.setAttribute('playsinline', '');
-  video.width = 640;
-  video.height = 480;
-
-  // 1. 카메라 연결
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: { width: 640, height: 480 },
-    audio: false
-  });
-  video.srcObject = stream;
-  await video.play();
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 480 },
+      audio: false
+    });
+    video.srcObject = stream;
+    await video.play();
+  }
 
   // 2. MoveNet 모델 로딩
   detector = await poseDetection.createDetector(
@@ -83,6 +85,36 @@ export async function initPoseManager(onPoseUpdate) {
 
   // 3. 실시간 포즈 추적
   detectLoop(onPoseUpdate);
+}
+
+
+export async function initHandDetector(onUltimate) {
+  if (!video) {
+    throw new Error("PoseManager must be initialized first");
+  }
+  handDetector = await handpose.load();
+
+  detectHandLoop(onUltimate);
+}
+
+function isVGesture(predictions){
+  if(predictions.length === 0)return false;
+
+  const landmarks = predictions[0].landmarks;
+
+  const indexTip = landmarks[8];
+  const middleTip = landmarks[12];
+  const ringTip = landmarks[16];
+  const pinkyTip = landmarks[20];
+
+  const indexMiddleDist = Math.hypot(
+    indexTip[0] - middleTip[0],
+    indexTip[1] - middleTip[1]
+  )
+
+  return indexMiddleDist > 50 &&
+         ringTip[1] > indexTip[1] &&
+         pinkyTip[1] > middleTip[1];
 }
 
 async function detectLoop(onPoseUpdate) {
@@ -97,6 +129,20 @@ async function detectLoop(onPoseUpdate) {
         const interpreted = interpretPose(keypoints);
         onPoseUpdate(interpreted);
       }
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  frame();
+}
+
+async function detectHandLoop(onUltimate) {
+  async function frame() {
+    const predictions = await handDetector.estimateHands(video);
+
+    if (isVGesture(predictions) && onUltimate) {
+      onUltimate();
     }
 
     requestAnimationFrame(frame);

@@ -52,7 +52,7 @@ export function initSocket() {
   window.socket = socket; // 전역으로 설정
 
   socket.onopen = () => {
-    console.log("✅ WebSocket 연결됨");
+    console.log(" WebSocket 연결됨");
     // 플레이어 ID 생성 및 저장
     window.myPlayerId = Math.random().toString(36).substr(2, 9);
     // 여기서 바로 joinRoom을 보내지 않음
@@ -62,8 +62,8 @@ export function initSocket() {
     const msg = JSON.parse(e.data);
     console.log("서버로부터 메시지 수신:", msg);
     console.log("msg.type:", msg.type);
-  console.log("msg.playerCount:", msg.playerCount);
-  console.log("전체 msg 객체:", JSON.stringify(msg, null, 2));
+    console.log("msg.playerCount:", msg.playerCount);
+    console.log("전체 msg 객체:", JSON.stringify(msg, null, 2));
 
     if (msg.type === "assign_id") {
       playerId = msg.playerId;
