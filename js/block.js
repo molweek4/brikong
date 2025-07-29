@@ -12,13 +12,23 @@ export class Block {
     return this.hp <= 0;
   }
 
-  display() {
-    // 체력에 따라 색상 조정
-    if (this.hp === 3) fill(180, 0, 0);         // 빨강
-    else if (this.hp === 2) fill(255, 120, 0);  // 주황
-    else fill(255, 200, 0);                     // 노랑
+  display(blockImg1, blockImg2, blockImg3) {
+    // 체력에 따라 이미지 선택
+    let img;
+    if (this.hp === 3) img = blockImg3;
+    else if (this.hp === 2) img = blockImg2;
+    else img = blockImg1;
 
-    rect(this.x, this.y, this.w, this.h, 8); // 둥근 모서리로 더 귀엽게
+    if (img) {
+      // 이미지로 블록 그리기
+      image(img, this.x, this.y, this.w, this.h);
+    } else {
+      // 이미지가 없을 때 기본 색상 사각형
+      if (this.hp === 3) fill(180, 0, 0);         // 빨강
+      else if (this.hp === 2) fill(255, 120, 0);  // 주황
+      else fill(255, 200, 0);                     // 노랑
+      rect(this.x, this.y, this.w, this.h, 8);
+    }
 
     // 체력 수치 텍스트
     fill(0);
