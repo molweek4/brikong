@@ -36,9 +36,14 @@ body {
   }
   
   button:hover {
-    transform: translateX(-50%) scale(1.5);
+    transform: translateX(-50%) scale(1.3);
     box-shadow: 0 8px 8px #aa918136;;
   }
+
+  #start-game-btn > button:hover {
+      transform: translateX(-50%) scale(1.05); /* 기존보다 훨씬 작게 */
+  }
+
   
   #startBtn {
     /*top: 50%;*/
@@ -58,37 +63,37 @@ body {
   }
 
   @font-face {
-  font-family: 'GmarketSans';
-  src: url('../assets/GmarketSansTTFMedium.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'GmarketSans';
-  src: url('../assets/GmarketSansTTFBold.ttf') format('truetype');
-  font-weight: bold;
-  font-style: normal;
-}
+    font-family: 'GmarketSans';
+    src: url('../assets/GmarketSansTTFMedium.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+  }
 
   @font-face {
-  font-family: 'gangwon';
-  src: url('../assets/bold.ttf') format('truetype');
-  font-weight: bold;
-  font-style: normal;
-}
+    font-family: 'GmarketSans';
+    src: url('../assets/GmarketSansTTFBold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+  }
 
-@font-face {
-  font-family: 'gangwon';
-  src: url('../assets/light.ttf') format('truetype');
-  font-weight: 300;
-  font-style: normal;
-}
+  @font-face {
+    font-family: 'gangwon';
+    src: url('../assets/bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+  }
+
+  @font-face {
+    font-family: 'gangwon';
+    src: url('../assets/light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+  }
 
 
-@font-face {
-  font-family: 'mango';
-  src: url('../assets/Mango.ttf') format('truetype');
-  font-weight: bold;
-  font-style: normal;
-}
+  @font-face {
+    font-family: 'mango';
+    src: url('../assets/Mango.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+  }

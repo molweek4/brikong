@@ -76,6 +76,24 @@ function initBlocks(){
 function triggerUltimateSkill() {
   console.log("🚀 궁극기 발동!");
   // 여기에 게임 속 로직 추가 (예: 블록 파괴, 점수 증가 등)
+
+  let maxY = Math.max(...blocks.map(b => b.y));
+
+  // 2. 해당 줄에 있는 블록들 필터링
+  const bottomBlocks = blocks.filter(b => b.y === maxY);
+
+   // 3. 각 블록의 hp 값을 점수로 추가
+  bottomBlocks.forEach(block => {
+    score += block.hp;  // 블록당 점수 = 체력값
+  });
+
+  // 4. 블록 제거
+  blocks = blocks.filter(b => Math.abs(b.y - maxY) >= 1);
+
+  // 5. 서버에 제거된 블록들 전송 (멀티플레이 반영)
+  bottomBlocks.forEach(block => {
+    sendBlockDestroyed(block.x, block.y);
+  });
 }
 
 
@@ -178,17 +196,16 @@ window.setup = function () {
   initPoseManager((poseInfo) => {
     //console.log("Pose detected", poseInfo);
     if (poseInfo.paddleAngle < -90 || poseInfo.paddleAngle > 90) return;
-
-
     if (!paddle) {
       paddle = new Paddle(); // Paddle이 없으면 즉시 생성
     }
     paddle.applyPoseControl(poseInfo);
 
     sendPaddleUpdate(paddle.x, paddle.angle);
+  }).then(() => { 
+    return initHandDetector(triggerUltimateSkill);
   })
-  
-  initHandDetector(triggerUltimateSkill);
+
 
   if (restartBtn) {
     restartBtn.onclick = () => {
@@ -284,6 +301,7 @@ window.draw = function () {
   }
 
   if (window.gameState === "playing") {
+    textFont("sans-serif"); 
     if (startBtn) startBtn.style.display = 'none';
     if (restartBtn) restartBtn.style.display = 'none';
     if (myImg) {
@@ -460,6 +478,7 @@ window.draw = function () {
   }
 
   if (gameState === "gameover") {
+    textFont("sans-serif"); 
     positionRestartButton();
     rectMode(CORNER);
     fill(0, 0, 0, 200); // 또는 fill(0); for 완전 불투명

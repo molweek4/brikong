@@ -5,6 +5,8 @@ let prevNoseRatio = 0.5;
 let prevPaddleAngle = 0;
 
 let handDetector = null;
+let lastHandCheck = 0;
+const HAND_INTERVAL = 200; // 0.2초마다 체크
 
 
 function interpretPose(keypoints){
@@ -58,6 +60,7 @@ function interpretPose(keypoints){
 
 export async function initPoseManager(onPoseUpdate) {
   await tf.setBackend('webgl');
+  console.log("Loading pose...");
   
   if (!video) {
     video = document.createElement('video');
@@ -68,7 +71,7 @@ export async function initPoseManager(onPoseUpdate) {
     video.height = 480;
 
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: 640, height: 480 },
+      video: { width: 640, height: 480},
       audio: false
     });
     video.srcObject = stream;
@@ -92,7 +95,9 @@ export async function initHandDetector(onUltimate) {
   if (!video) {
     throw new Error("PoseManager must be initialized first");
   }
+  console.log("Loading Handpose...");
   handDetector = await handpose.load();
+  console.log("Handpose model loaded successfully!");
 
   detectHandLoop(onUltimate);
 }
@@ -138,15 +143,15 @@ async function detectLoop(onPoseUpdate) {
 }
 
 async function detectHandLoop(onUltimate) {
-  async function frame() {
-    const predictions = await handDetector.estimateHands(video);
-
-    if (isVGesture(predictions) && onUltimate) {
-      onUltimate();
+  async function frame(timestamp) {
+    if (timestamp - lastHandCheck > HAND_INTERVAL) {
+      const predictions = await handDetector.estimateHands(video);
+      if (isVGesture(predictions) && onUltimate) {
+        onUltimate();
+      }
+      lastHandCheck = timestamp;
     }
-
     requestAnimationFrame(frame);
   }
-
   frame();
 }

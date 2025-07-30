@@ -60,10 +60,10 @@ export function initSocket() {
 
   socket.onmessage = (e) => {
     const msg = JSON.parse(e.data);
-    console.log("서버로부터 메시지 수신:", msg);
-    console.log("msg.type:", msg.type);
-    console.log("msg.playerCount:", msg.playerCount);
-    console.log("전체 msg 객체:", JSON.stringify(msg, null, 2));
+    //console.log("서버로부터 메시지 수신:", msg);
+    //console.log("msg.type:", msg.type);
+    //console.log("msg.playerCount:", msg.playerCount);
+    //console.log("전체 msg 객체:", JSON.stringify(msg, null, 2));
 
     if (msg.type === "assign_id") {
       playerId = msg.playerId;
