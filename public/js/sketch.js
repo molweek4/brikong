@@ -4,7 +4,7 @@ import { getEmoji, Item, updateItemEffect, updateItems } from './item.js';
 import { Paddle } from './paddle.js';
 
 import { initHandDetector, initPoseManager } from './poseManager.js';
-import { getInitialBlocks, initSocket, joinRoom, onBlockAdd, onBlockUpdate, sendBallPosition, sendBlockDestroyed, sendItemCollected, sendPaddlePosition, sendPaddleUpdate } from './socket.js';
+import { onScoreUpdate, getInitialBlocks, initSocket, joinRoom, onBlockAdd, onBlockUpdate, sendBallPosition, sendBlockDestroyed, sendItemCollected, sendPaddlePosition, sendPaddleUpdate } from './socket.js';
 
 // 전역 변수
 let paddle;
@@ -24,6 +24,8 @@ let SansFontBold;
 let SansFontMedium;
 let SansFontLight;
 
+let myScore = 0;
+let opponentScore = 0;
 
 let lastBlockAddTime = 0;
 let blockAddInterval = 8000; // 8초
@@ -40,6 +42,13 @@ let playerCount = 1; // 대기방 인원 표시용
 export function getPlayerCount() {
   return playerCount;
 }
+
+
+onScoreUpdate((scores) => {
+  const myIndex = window.myPlayerIndex || 0; // 서버가 index 제공해야 함
+  myScore = scores[myIndex];
+  opponentScore = scores[1 - myIndex];
+});
 
 // 블록 초기화
 /*function initBlocks() {
@@ -334,7 +343,7 @@ window.draw = function () {
         sendBlockDestroyed(blocks[hitIdx].x, blocks[hitIdx].y);
         
         blocks.splice(hitIdx, 1);
-        score++; // 블록 제거 시 점수 증가
+        //score++; // 블록 제거 시 점수 증가
       }
     }
 
@@ -466,7 +475,9 @@ window.draw = function () {
     fill(255);
     textSize(20);
     textAlign(LEFT, TOP);
-    text(`점수: ${score}`, 10, 10);
+    text(`내 점수: ${myScore}`, 10, 10);
+    textAlign(RIGHT, TOP);
+    text(`상대 점수: ${opponentScore}`, width-10, 10);
 
     // item 이름 표시
     if (activeItem) {
