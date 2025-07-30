@@ -1,7 +1,8 @@
 body {
     margin: 0;
-    font-family: 'Gmarket Sans', 'Pretendard', sans-serif;
-    background: linear-gradient(to bottom, #fceabb, #f8b500);
+    font-family: 'Gmarket Sans', 'Pretendard', sans-serif, 'gangwon', 'mango';
+    /*background: linear-gradient(to bottom, #fceabb, #f8b500);*/
+    background: rgba(64, 64, 64, 0.976);
     overflow: hidden;
     color: #333;
   }
@@ -17,15 +18,16 @@ body {
   
   /* 버튼 스타일 */
   button {
-    padding: 14px 28px;
-    font-size: 20px;
+    font-family: 'MangoDdobak-B';
+    padding: 10px 28px;
+    font-size: 22px;
     font-weight: bold;
-    border: none;
-    border-radius: 16px;
+    border: 2px solid #5a321788;
+    border-radius: 18px;
     cursor: pointer;
-    background: linear-gradient(to right, #ff9a9e, #fad0c4);
-    color: white;
-    box-shadow: 0 5px 15px rgba(255, 174, 201, 0.4);
+    background: #f3c57c75;
+    color: #5A3217;
+    box-shadow: 0 2px 2px #aa918136;
     transition: transform 0.2s, box-shadow 0.2s;
     position: absolute;
     left: 50%;
@@ -34,12 +36,18 @@ body {
   }
   
   button:hover {
-    transform: translateX(-50%) scale(1.08);
-    box-shadow: 0 8px 20px rgba(255, 174, 201, 0.6);
+    transform: translateX(-50%) scale(1.3);
+    box-shadow: 0 8px 8px #aa918136;;
   }
+
+  #start-game-btn > button:hover {
+      transform: translateX(-50%) scale(1.05); /* 기존보다 훨씬 작게 */
+  }
+
   
   #startBtn {
-    top: 50%;
+    /*top: 50%;*/
+    top: calc(50% + 100px); /* 중앙에서 100px 아래 */
   }
   
   #restartBtn {
@@ -47,3 +55,45 @@ body {
     display: none;
   }
   
+  @font-face {
+    font-family: 'MangoDdobak-B';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2405-3@1.1/MangoDdobak-B.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+  }
+
+  @font-face {
+    font-family: 'GmarketSans';
+    src: url('../assets/GmarketSansTTFMedium.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  @font-face {
+    font-family: 'GmarketSans';
+    src: url('../assets/GmarketSansTTFBold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+  }
+
+  @font-face {
+    font-family: 'gangwon';
+    src: url('../assets/bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+  }
+
+  @font-face {
+    font-family: 'gangwon';
+    src: url('../assets/light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+  }
+
+
+  @font-face {
+    font-family: 'mango';
+    src: url('../assets/Mango.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+  }

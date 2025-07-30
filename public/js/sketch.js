@@ -4,7 +4,7 @@ import { getEmoji, Item, updateItemEffect, updateItems } from './item.js';
 import { Paddle } from './paddle.js';
 
 import { initHandDetector, initPoseManager } from './poseManager.js';
-import { getInitialBlocks, getOpponentBallPos, getOpponentPose, getPlayerId, initSocket, joinRoom, onBlockAdd, onBlockUpdate, sendBallPosition, sendBlockDestroyed, sendItemCollected, sendPaddlePosition, sendPaddleUpdate } from './socket.js';
+import { onScoreUpdate, getInitialBlocks, initSocket, joinRoom, onBlockAdd, onBlockUpdate, sendBallPosition, sendBlockDestroyed, sendItemCollected, sendPaddlePosition, sendPaddleUpdate } from './socket.js';
 
 // 전역 변수
 let paddle;
@@ -17,7 +17,15 @@ let score = 0;
 let gameOver = false;
 let gameState = "start"; // "start", "waiting", "color_select", "playing", "gameover"
 let myImg;
-let blockImg1, blockImg2, blockImg3; // 체력별 블록 이미지
+let blockImg1, blockImg2, blockImg3, logoImg; // 체력별 블록 이미지
+let lightFont;
+let boldFont;
+let SansFontBold;
+let SansFontMedium;
+let SansFontLight;
+
+let myScore = 0;
+let opponentScore = 0;
 
 let lastBlockAddTime = 0;
 let blockAddInterval = 8000; // 8초
@@ -34,6 +42,13 @@ let playerCount = 1; // 대기방 인원 표시용
 export function getPlayerCount() {
   return playerCount;
 }
+
+
+onScoreUpdate((scores) => {
+  const myIndex = window.myPlayerIndex || 0; // 서버가 index 제공해야 함
+  myScore = scores[myIndex];
+  opponentScore = scores[1 - myIndex];
+});
 
 // 블록 초기화
 /*function initBlocks() {
@@ -70,6 +85,24 @@ function initBlocks(){
 function triggerUltimateSkill() {
   console.log("🚀 궁극기 발동!");
   // 여기에 게임 속 로직 추가 (예: 블록 파괴, 점수 증가 등)
+
+  let maxY = Math.max(...blocks.map(b => b.y));
+
+  // 2. 해당 줄에 있는 블록들 필터링
+  const bottomBlocks = blocks.filter(b => b.y === maxY);
+
+   // 3. 각 블록의 hp 값을 점수로 추가
+  bottomBlocks.forEach(block => {
+    score += block.hp;  // 블록당 점수 = 체력값
+  });
+
+  // 4. 블록 제거
+  blocks = blocks.filter(b => Math.abs(b.y - maxY) >= 1);
+
+  // 5. 서버에 제거된 블록들 전송 (멀티플레이 반영)
+  bottomBlocks.forEach(block => {
+    sendBlockDestroyed(block.x, block.y);
+  });
 }
 
 
@@ -110,7 +143,7 @@ function positionStartButton() {
   const rect = canvas.getBoundingClientRect();
   // 안내문 아래에 버튼 위치 (안내문 y좌표: rect.top + rect.height/2 + 40)
   btn.style.left = `${rect.left + rect.width / 2}px`;
-  btn.style.top = `${rect.top + rect.height / 2 + 60}px`; // 60px 아래 (간격 조절 가능)
+  btn.style.top = `${rect.top + rect.height / 2 + 90}px`; // 60px 아래 (간격 조절 가능)
   btn.style.transform = 'translate(-50%, 0)';
   btn.style.display = 'block';
 }
@@ -141,6 +174,13 @@ window.preload = function() {
   blockImg1 = loadImage('../assets/images/blue.png'); // hp=1
   blockImg2 = loadImage('../assets/images/green.png'); // hp=2
   blockImg3 = loadImage('../assets/images/red.png'); // hp=3
+  
+  logoImg = loadImage('../assets/logo.png');
+  boldFont = loadFont('../assets/bold.ttf'); 
+  lightFont = loadFont('../assets/light.ttf'); 
+  SansFontBold = loadFont('../assets/GmarketSansTTFBold.ttf'); 
+  SansFontLight = loadFont('../assets/GmarketSansTTFLight.ttf');
+  SansFontMedium = loadFont('../assets/GmarketSansTTFMedium.ttf');
 };
 
 window.startGameFromServer = function () {
@@ -165,17 +205,16 @@ window.setup = function () {
   initPoseManager((poseInfo) => {
     //console.log("Pose detected", poseInfo);
     if (poseInfo.paddleAngle < -90 || poseInfo.paddleAngle > 90) return;
-
-
     if (!paddle) {
       paddle = new Paddle(); // Paddle이 없으면 즉시 생성
     }
     paddle.applyPoseControl(poseInfo);
 
     sendPaddleUpdate(paddle.x, paddle.angle);
+  }).then(() => { 
+    return initHandDetector(triggerUltimateSkill);
   })
-  
-  initHandDetector(triggerUltimateSkill);
+
 
   if (restartBtn) {
     restartBtn.onclick = () => {
@@ -220,26 +259,37 @@ Ball.prototype.checkCollision = function(blocks, activeItem) {
 
 // p5.js 필수 함수: draw
 window.draw = function () {
-  background(0);
+  background('#FCEDD5');
   console.log("draw 함수 실행, gameState:", window.gameState);
-  if (gameState === "start") {
-    fill(255);
+  if (gameState === "start" && logoImg) {
+    /*fill(255);
     textSize(48);
     textAlign(CENTER, CENTER);
     text("Brikong", width / 2, height / 2 - 40);
     textSize(24);
-    text("시작 버튼을 누르세요", width / 2, height / 2 + 20);
+    text("시작 버튼을 누르세요", width / 2, height / 2 + 20);*/
+    const scaleFactor = 0.5; // 캔버스 폭의 50% 크기
+    const logoWidth = width * scaleFactor;
+    const aspectRatio = logoImg.height / logoImg.width;
+    const logoHeight = logoWidth * aspectRatio;
+
+    push(); 
+    imageMode(CENTER);
+    image(logoImg, width / 2, height / 2 - 30 , logoWidth, logoHeight);
+    pop();  
+
     positionStartButton(); // draw에서 위치 조정
     return;
   }
 
   if (window.gameState === "waiting") {
     // 대기방 화면 그리기
-    background(0, 0, 0, 180);
+    background(0, 0, 0, 150);
     fill(255);
+
     textAlign(CENTER, CENTER);
-    textSize(32);
-    text("상대방을 기다리는 중입니다...", width/2, height/2);
+    textSize(28);
+    text("상대 기다리는 중", width/2, height/2);
     textSize(20);
     console.log("window.playerCount", window.playerCount);
     text(`${window.playerCount || 1}/2 명 입장`, width/2, height/2 + 40);
@@ -248,17 +298,19 @@ window.draw = function () {
 
   if (window.gameState === "color_select") {
     // 색상 선택 화면에서는 배경만 그리기 (텍스트 없음)
-    background(0, 0, 0, 180);
-    fill(255);
+    //background(0, 0, 0, 180);
+    fill('#573016');
     textAlign(CENTER, TOP);
     textSize(32);
-    text("색상을 선택해주세요.", width/2, 60);
+    textFont(SansFontMedium);
+    text("색상을 선택해주세요", width/2, 60);
     console.log("gameState", "color_select");
     // 색상 선택 UI는 HTML에서 처리됨
     noLoop();
   }
 
   if (window.gameState === "playing") {
+    textFont("sans-serif"); 
     if (startBtn) startBtn.style.display = 'none';
     if (restartBtn) restartBtn.style.display = 'none';
     if (myImg) {
@@ -291,7 +343,7 @@ window.draw = function () {
         sendBlockDestroyed(blocks[hitIdx].x, blocks[hitIdx].y);
         
         blocks.splice(hitIdx, 1);
-        score++; // 블록 제거 시 점수 증가
+        //score++; // 블록 제거 시 점수 증가
       }
     }
 
@@ -423,7 +475,9 @@ window.draw = function () {
     fill(255);
     textSize(20);
     textAlign(LEFT, TOP);
-    text(`점수: ${score}`, 10, 10);
+    text(`내 점수: ${myScore}`, 10, 10);
+    textAlign(RIGHT, TOP);
+    text(`상대 점수: ${opponentScore}`, width-10, 10);
 
     // item 이름 표시
     if (activeItem) {
@@ -435,12 +489,12 @@ window.draw = function () {
   }
 
   if (gameState === "gameover") {
+    textFont("sans-serif"); 
     positionRestartButton();
     rectMode(CORNER);
     fill(0, 0, 0, 200); // 또는 fill(0); for 완전 불투명
     noStroke();
     rect(0, 0, width, height);
-
     // 텍스트
     fill(255, 50, 50);
     textSize(48);

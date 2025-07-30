@@ -11,7 +11,7 @@ const wss = new WebSocket.Server({ server });
 app.use(express.static(path.join(__dirname, 'public')));
 
 const COLORS = ["red", "yellow", "green", "blue", "purple"];
-const rooms = {}; // { roomId: { players: [], colors: {}, usedColors: [], blocks: [], items: [] } }
+const rooms = {}; // { roomId: { players: [{ ws, score }], colors: {}, usedColors: [], blocks: [], items: [] } }
 let roomCounter = 1;
 
 function generateBlocks() {
@@ -28,6 +28,15 @@ function generateBlocks() {
     }
   }
   return blocks;
+}
+
+function broadcastScoreUpdate(room) {
+  const scores = room.players.map(p => p.score);
+  room.players.forEach(player => {
+    if (player.ws.readyState === WebSocket.OPEN) {
+      player.ws.send(JSON.stringify({ type: "score_update", scores }));
+    }
+  });
 }
 
 function addBlockRow() {
@@ -54,22 +63,27 @@ wss.on('connection', (ws) => {
   let joinedRoom = null;
 
   ws.on('message', (message) => {
+    //console.log("서버가 받은 원본 메시지:", message);
     let msg;
     try { msg = JSON.parse(message); } catch (e) { return; }
-
+    //console.log("파싱된 메시지 type:", msg.type);  // ✅ 추가
     if (msg.type === 'joinRoom') {
       let roomId = Object.keys(rooms).find(id => rooms[id].players.length < 2);
       if (!roomId) {
         roomId = `room${roomCounter++}`;
         rooms[roomId] = { players: [], colors: {}, usedColors: [], blocks: [], items: [] };
       }
-      rooms[roomId].players.push(ws);
+      rooms[roomId].players.push({ ws, score: 0 }); 
       joinedRoom = roomId;
 
+      const playerIndex = rooms[roomId].players.length - 1;
+      ws.send(JSON.stringify({ type: "assign_index", index: playerIndex }));
+
+
       const playerCount = rooms[roomId].players.length;
-      rooms[roomId].players.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ type: 'waiting', playerCount }));
+      rooms[roomId].players.forEach(player => {
+        if (player.ws.readyState === WebSocket.OPEN) {
+          player.ws.send(JSON.stringify({ type: 'waiting', playerCount }));
         }
       });
     }
@@ -81,9 +95,9 @@ wss.on('connection', (ws) => {
       } else {
         room.colors[ws.id] = msg.color;
         room.usedColors.push(msg.color);
-        room.players.forEach(client => {
-          if (client !== ws && client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({
+        room.players.forEach(player => {
+          if (player.ws !== ws && player.ws.readyState === WebSocket.OPEN) {
+            player.ws.send(JSON.stringify({
               type: 'color_update',
               usedColors: room.usedColors,
               myColor: msg.color
@@ -92,9 +106,9 @@ wss.on('connection', (ws) => {
         });
         if (Object.keys(room.colors).length === 2) {
           room.blocks = generateBlocks();
-          room.players.forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-              client.send(JSON.stringify({ type: 'enable_start_button', usedColors: room.usedColors }));
+          room.players.forEach(player => {
+            if (player.ws.readyState === WebSocket.OPEN) {
+              player.ws.send(JSON.stringify({ type: 'enable_start_button', usedColors: room.usedColors }));
             }
           });
         }
@@ -104,9 +118,9 @@ wss.on('connection', (ws) => {
     if (msg.type === 'ready_to_start') {
       const room = rooms[joinedRoom];
       if (room && room.players.length === 2 && Object.keys(room.colors).length === 2) {
-        room.players.forEach(client => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({
+        room.players.forEach(player => {
+          if (player.ws.readyState === WebSocket.OPEN) {
+            player.ws.send(JSON.stringify({
               type: 'startGame',
               blocks: room.blocks,
               playerColors: room.colors
@@ -120,9 +134,9 @@ wss.on('connection', (ws) => {
       const room = rooms[joinedRoom];
       if (room) {
         const targetType = msg.type === 'paddle_position' ? 'opponent_paddle' : 'opponent_ball';
-        room.players.forEach(client => {
-          if (client !== ws && client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ type: targetType, data: msg.data, color: room.colors[ws.id] }));
+        room.players.forEach(player => {
+          if (player.ws !== ws && player.ws.readyState === WebSocket.OPEN) {
+            player.ws.send(JSON.stringify({ type: targetType, data: msg.data, color: room.colors[ws.id] }));
           }
         });
       }
@@ -130,14 +144,25 @@ wss.on('connection', (ws) => {
 
     if (msg.type === 'block_destroyed') {
       const room = rooms[joinedRoom];
-      if (room && Math.random() < 0.3) {
-        const newItem = createItem(msg.data.x, msg.data.y);
-        room.items.push(newItem);
-        room.players.forEach(client => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ type: 'item_created', item: newItem }));
-          }
-        });
+      console.log("블록 파괴 메시지 수신:", msg.data); // ✅ 추가
+      if (room) {
+        const player = room.players.find(p => p.ws === ws);
+        if (player) player.score += 1;
+        console.log("점수 증가:", player.score); // ✅ 추가
+        
+
+        broadcastScoreUpdate(room);
+
+        // 아이템 생성
+        if (Math.random() < 0.3) {
+          const newItem = createItem(msg.data.x, msg.data.y);
+          room.items.push(newItem);
+          room.players.forEach(player => {
+            if (player.ws.readyState === WebSocket.OPEN) {
+              player.ws.send(JSON.stringify({ type: 'item_created', item: newItem }));
+            }
+          });
+        }
       }
     }
 
@@ -147,12 +172,12 @@ wss.on('connection', (ws) => {
         room.items = room.items.filter(item =>
           !(item.x === msg.data.x && item.y === msg.data.y && item.type === msg.data.type)
         );
-        room.players.forEach(client => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ 
+        room.players.forEach(player => {
+          if (player.ws.readyState === WebSocket.OPEN) {
+            player.ws.send(JSON.stringify({ 
               type: 'item_collected', 
               item: msg.data,
-              collectedBy: ws.id // 아이템을 획득한 플레이어 ID
+              collectedBy: ws.id
             }));
           }
         });
@@ -162,14 +187,14 @@ wss.on('connection', (ws) => {
 
   ws.on('close', () => {
     if (joinedRoom && rooms[joinedRoom]) {
-      rooms[joinedRoom].players = rooms[joinedRoom].players.filter(c => c !== ws);
+      rooms[joinedRoom].players = rooms[joinedRoom].players.filter(p => p.ws !== ws);
       if (rooms[joinedRoom].players.length === 0) {
         delete rooms[joinedRoom];
       } else {
         const count = rooms[joinedRoom].players.length;
-        rooms[joinedRoom].players.forEach(client => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ type: 'waiting', playerCount: count }));
+        rooms[joinedRoom].players.forEach(player => {
+          if (player.ws.readyState === WebSocket.OPEN) {
+            player.ws.send(JSON.stringify({ type: 'waiting', playerCount: count }));
           }
         });
       }
@@ -185,9 +210,9 @@ setInterval(() => {
       const newRow = addBlockRow();
       room.blocks.forEach(b => b.y += 40);
       room.blocks.push(...newRow);
-      room.players.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ type: 'block_add', newRow }));
+      room.players.forEach(player => {
+        if (player.ws.readyState === WebSocket.OPEN) {
+          player.ws.send(JSON.stringify({ type: 'block_add', newRow }));
         }
       });
     }

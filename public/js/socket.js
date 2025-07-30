@@ -6,6 +6,7 @@ let initialBlocks = [];
 let onBlockUpdateCallback = null;
 let onBlockAddCallback = null;
 let playerCount = 1; // 대기방 인원 표시용
+let onScoreUpdateCallback = null;
 
 export function getSocket() {
   return socket;
@@ -46,6 +47,10 @@ export function onBlockUpdate(callback) {
 export function onBlockAdd(callback) {
   onBlockAddCallback = callback;
 }
+export function onScoreUpdate(callback) {
+  onScoreUpdateCallback = callback;
+}
+
 
 export function initSocket() {
   socket = new WebSocket("ws://localhost:3000");
@@ -60,13 +65,17 @@ export function initSocket() {
 
   socket.onmessage = (e) => {
     const msg = JSON.parse(e.data);
-    console.log("서버로부터 메시지 수신:", msg);
-    console.log("msg.type:", msg.type);
-    console.log("msg.playerCount:", msg.playerCount);
-    console.log("전체 msg 객체:", JSON.stringify(msg, null, 2));
+    //console.log("서버로부터 메시지 수신:", msg);
+    //console.log("msg.type:", msg.type);
+    //console.log("msg.playerCount:", msg.playerCount);
+    //console.log("전체 msg 객체:", JSON.stringify(msg, null, 2));
 
     if (msg.type === "assign_id") {
       playerId = msg.playerId;
+    }
+
+    if (msg.type === "assign_index") {
+      window.myPlayerIndex = msg.index;
     }
 
     if (msg.type === "opponent_paddle" && msg.playerId !== playerId) {
@@ -159,6 +168,12 @@ export function initSocket() {
       };
     }
     
+    if (msg.type === "score_update") {
+      if (onScoreUpdateCallback) {
+        onScoreUpdateCallback(msg.scores);
+      }
+    }
+
     // 상대방 공 위치 수신
     if (msg.type === "opponent_ball") {
       window.opponentBall = {
@@ -219,11 +234,13 @@ export function sendPaddlePosition(x, angle) {
 }
 
 export function sendBlockDestroyed(x, y) {
+   console.log("블록 파괴 전송 시도:", x, y);  // ✅ 추가
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify({
       type: "block_destroyed",
       data: {x, y}
     }));
+    console.log("블록 파괴 서버로 전송 완료");  // ✅ 추가
   }
 }
 
