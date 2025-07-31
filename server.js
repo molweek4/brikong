@@ -149,8 +149,24 @@ wss.on('connection', (ws) => {
         const player = room.players.find(p => p.ws === ws);
         if (player) player.score += 1;
         console.log("점수 증가:", player.score); // ✅ 추가
-        
 
+        const block = room.blocks.find(b => b.x === msg.data.x && b.y === msg.data.y);
+        if (block) {
+          block.hp -= 1;
+          if (block.hp <= 0) {
+            room.blocks = room.blocks.filter(b => !(b.x === block.x && b.y === block.y));
+          }
+        }
+
+        // ✅ 모든 플레이어에게 블록 업데이트 브로드캐스트
+        room.players.forEach(player => {
+          if (player.ws.readyState === WebSocket.OPEN) {
+            player.ws.send(JSON.stringify({
+              type: 'blocks_update',
+              blocks: room.blocks
+            }));
+          }
+        });
         broadcastScoreUpdate(room);
 
         // 아이템 생성
