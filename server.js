@@ -193,13 +193,13 @@ wss.on('connection', (ws) => {
 
     if (msg.type === 'player_dead') {
       const room = rooms[joinedRoom];
-      console.log("플레이어 사망 메시지 수신:", msg);
+      //console.log("플레이어 사망 메시지 수신:", msg);
       if (room) {
         const playerIndex = room.players.findIndex(p => p.ws === ws);
         if (playerIndex !== -1) {
           room.isDead[playerIndex] = true;
-          console.log("플레이어", playerIndex, "사망 처리됨");
-          console.log("현재 isDead 상태:", room.isDead);
+          //console.log("플레이어", playerIndex, "사망 처리됨");
+          //console.log("현재 isDead 상태:", room.isDead);
         }
 
         // 둘 다 죽었는지 확인
