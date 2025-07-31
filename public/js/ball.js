@@ -23,7 +23,7 @@ export class Ball {
     if (this.y < this.r) this.dy *= -1;
 
     // 바닥 → 게임 오버 처리
-    if (this.y > height) {
+    if (this.y - this.r > height) {
       return true; // 바닥에 닿았음을 알림
     }
 
@@ -55,6 +55,8 @@ export class Ball {
 
       this.dx = newDx;
       this.dy = newDy;
+
+      this.y = paddle.y - paddle.h / 2 - this.r;
     }
     return false;
   }
@@ -86,8 +88,8 @@ export class Ball {
 
         if (b.hp <= 0) {
           blocks.splice(i, 1);
+          sendBlockDestroyed(b.x, b.y);
         }
-
         if (activeItem !== "fire") break;
       }
     }
