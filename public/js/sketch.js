@@ -621,47 +621,26 @@ window.draw = function () {
       lastBlockAddTime = millis();
     }*/
 
-
-
-    if (window.isPlayerDead) {
-      push();
-      noStroke();
-      fill(0, 180); // (검정, 알파=180) → 더 진하게 어두워짐
-      rect(0, 0, width, height);
-
-      push();
-      pop();
-      fill(255, 50, 50);
-      textSize(48);
-      textAlign(CENTER, CENTER);
-      text("🔥GAME OVER🔥", width / 2, height / 2);
-    }
-
-    // w() 내에서 score 표시
-    fill(255);
-    textSize(20);
-    textAlign(LEFT, TOP);
-    text(`내 점수: ${myScore}`, 10, 10);
-    textAlign(RIGHT, TOP);
-    text(`상대 점수: ${opponentScore}`, width-10, 10);
-
     // item 이름 표시
     if (activeItem) {
       // 아이템 효과 표시 (화면 위쪽 중앙)
       push();
       
+      const boxY = 30;
+      const boxHeight = 40;
+
       // 흰 배경 추가
       fill(255, 255, 255, 230);
       stroke(200, 200, 200);
       strokeWeight(1);
       rectMode(CENTER);
-      rect(width/2, 50, 200, 80, 10);
+      rect(width/2, boxY, 200, boxHeight, 10);
       
       // 아이템 아이콘과 텍스트 (가운데 정렬)
       textSize(14);
       textAlign(CENTER, CENTER);
       fill(50, 50, 50); // 텍스트 색상을 어둡게
-      text(getEmoji(activeItem), width/2, 40);
+      text(getEmoji(activeItem), width/2, boxY - 10);
       
       // 남은 시간 표시
       const elapsedTime = millis() - itemTimerRef.value;
@@ -671,11 +650,11 @@ window.draw = function () {
       if (remainingTime > 0) {
         textSize(14);
         fill(0, 0, 0);
-        text(`${remainingTime}초 남음`, width/2, 60);
+        text(`${remainingTime}초 남음`, width/2, boxY + 10);
       } else {
         textSize(14);
         fill(0, 0, 0);
-        text(`효과 해제`, width/2, 60);
+        text(`효과 해제`, width/2, boxY + 10);
       }
       pop();
     }
@@ -684,7 +663,7 @@ window.draw = function () {
     if (itemNotification && itemNotificationTimer > 0) {
       push();
       // 알림 박스 (상단 중앙)
-      fill(255, 255, 255, 230);
+      fill(255, 255, 255, 80);
       stroke(255, 215, 0);
       strokeWeight(2);
       rectMode(CENTER);
@@ -708,6 +687,39 @@ window.draw = function () {
       }
       pop();
     }
+
+
+    
+    if (window.isPlayerDead) {
+      push();
+      noStroke();
+      fill(0, 180); // (검정, 알파=180) → 더 진하게 어두워짐
+      rect(0, 0, width, height);
+
+      fill(255, 50, 50);
+      textSize(48);
+      textAlign(CENTER, CENTER);
+      textFont('sans-serif'); 
+      text("🔥", width / 2 - 200, height / 2); 
+
+      // GAME OVER (커스텀 폰트)
+      textFont(SansFontBold); 
+      text("GAME OVER", width / 2, height / 2);
+
+      // 오른쪽 🔥 (기본 폰트)
+      textFont('sans-serif'); 
+      text("🔥", width / 2 + 205, height / 2); 
+
+      pop();
+    }
+
+    // w() 내에서 score 표시
+    fill(255);
+    textSize(20);
+    textAlign(LEFT, TOP);
+    text(`내 점수: ${myScore}`, 10, 10);
+    textAlign(RIGHT, TOP);
+    text(`상대 점수: ${opponentScore}`, width-10, 10);
 
     checkBlockGameOver();
   }
