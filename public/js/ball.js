@@ -24,6 +24,7 @@ export class Ball {
 
     // 바닥 → 게임 오버 처리
     if (this.y - this.r > height) {
+
       return true; // 바닥에 닿았음을 알림
     }
 
@@ -43,6 +44,11 @@ export class Ball {
       this.x < paddle.x + paddle.w / 2 &&
       this.dy > 0 // 아래쪽으로 떨어질 때만
     ) {
+      // 패들 충돌 사운드 재생
+      if (window.playPaddleSound) {
+        window.playPaddleSound();
+      }
+      
       // 패들의 회전 각도 (단위: 도 → 라디안)
       const angleRad = radians(paddle.angle);
 

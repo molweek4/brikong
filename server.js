@@ -1,11 +1,29 @@
 // server.js - 통합된 WebSocket + 대기방 + 게임 서버
 const express = require('express');
 const http = require('http');
+const https = require('https');
+const fs = require('fs');
 const WebSocket = require('ws');
 const path = require('path');
 
 const app = express();
-const server = http.createServer(app);
+
+// HTTPS 설정
+let server;
+try {
+  // SSL 인증서 파일 확인
+  const privateKey = fs.readFileSync('./ssl/private.key', 'utf8');
+  const certificate = fs.readFileSync('./ssl/certificate.crt', 'utf8');
+  
+  const credentials = { key: privateKey, cert: certificate };
+  server = https.createServer(credentials, app);
+  console.log('HTTPS 서버로 실행됩니다.');
+} catch (error) {
+  // SSL 인증서가 없으면 HTTP로 실행
+  server = http.createServer(app);
+  console.log('HTTP 서버로 실행됩니다. (HTTPS를 원하면 SSL 인증서를 추가하세요)');
+}
+
 const wss = new WebSocket.Server({ server });
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -311,6 +329,10 @@ setInterval(() => {
 }, 8000);
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`);
+const HOST = '0.0.0.0'; // 모든 IP에서 접속 가능
+
+server.listen(PORT, HOST, () => {
+  console.log(`서버가 http://${HOST}:${PORT} 에서 실행 중입니다.`);
+  console.log(`로컬 접속: http://localhost:${PORT}`);
+  console.log(`다른 기기 접속: http://[로컬IP]:${PORT}`);
 });

@@ -1,7 +1,7 @@
 export class Paddle {
   constructor(color = "red") {
     this.x = width / 2;
-    this.y = height - 40;
+    this.y = height - 80; // 더 위로 이동 (60 → 80)
     this.w = 100;
     this.h = 15;
     this.angle = 0;
