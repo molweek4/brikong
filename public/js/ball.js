@@ -22,9 +22,8 @@ export class Ball {
     if (this.x < this.r || this.x > width - this.r) this.dx *= -1;
     if (this.y < this.r) this.dy *= -1;
 
-    // 바닥 → 게임 오버 처리
-    if (this.y - this.r > height) {
-
+    // 바닥 → 게임 오버 처리 (패들 위치보다 아래로 떨어지면)
+    if (this.y > paddle.y + paddle.h / 2) {
       return true; // 바닥에 닿았음을 알림
     }
 

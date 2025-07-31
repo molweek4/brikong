@@ -1,6 +1,3 @@
-let blocks = [];
-let score = 0;
-let gameOver = false;
 
 function initBlocks() {
   blocks = [];

@@ -325,7 +325,6 @@ window.setup = function () {
       joinRoom();
     };
   }
-};
 
 // Ball의 checkCollision은 충돌한 블록 인덱스만 반환
 Ball.prototype.checkCollision = function(blocks, activeItem) {
@@ -416,7 +415,7 @@ window.draw = function () {
     if (myBall.update(false, paddle)) {
       gameState = "gameover";
       noLoop();
-      if (restartBtn) restartBtn.style.display = 'block';*/
+      if (restartBtn) restartBtn.style.display = 'block';
 
       window.isPlayerDead = true; 
       if (socket && socket.readyState === WebSocket.OPEN) {
@@ -707,8 +706,7 @@ window.draw = function () {
     textAlign(CENTER, TOP);
     text("상대방이 방을 나갔습니다", width / 2, height / 2 + 140);
   }
-
-
+}
 };
 
 function addBlockRow() {
@@ -735,11 +733,6 @@ function moveBlocksDown() {
 function checkBlockGameOver() {
   for (let b of blocks) {
     if (b.y + b.h >= paddle.y - paddle.h / 2) {
-      gameState = "gameover";
-      if (restartBtn) restartBtn.style.display = 'block';
-      noLoop();
-      break;*/
-
       window.isPlayerDead = true;
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({ type: "player_dead" }));
@@ -747,4 +740,4 @@ function checkBlockGameOver() {
       break;
     }
   }
-}}
+}
