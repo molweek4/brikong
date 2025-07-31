@@ -48,8 +48,8 @@ export class Item {
 export function updateItemEffect(activeItem, itemTimer, ball, paddle, setActiveItem) {
   if (activeItem && millis() - itemTimer > 10000) {
     if (activeItem === "slow") {
-      ball.dx *= 2;
-      ball.dy *= 2;
+      ball.dx /= 0.5; // slow 효과 해제: 공 속도 원래대로
+      ball.dy /= 0.5;
     } else if (activeItem === "penalty") {
       paddle.w /= 0.5; // penalty 효과 해제: 패들 크기 원래대로
     }
@@ -66,8 +66,8 @@ export function updateItems(ball, paddle, items, activeItem, setActiveItem, item
       // 기존 효과 해제
       if (activeItem) {
         if (activeItem === "slow") {
-          ball.dx *= 2;
-          ball.dy *= 2;
+          ball.dx /= 0.5; // slow 효과 해제: 공 속도 원래대로
+          ball.dy /= 0.5;
         } else if (activeItem === "penalty") {
           paddle.w /= 0.5; // penalty 효과 해제: 패들 크기 원래대로
         }

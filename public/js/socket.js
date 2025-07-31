@@ -260,12 +260,12 @@ export function sendPaddlePosition(x, angle) {
   }
 }
 
-export function sendBlockDestroyed(x, y) {
-   console.log("블록 파괴 전송 시도:", x, y);  // ✅ 추가
+export function sendBlockDestroyed(x, y, activeItem = null) {
+   console.log("블록 파괴 전송 시도:", x, y, "아이템:", activeItem);  // ✅ 추가
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify({
       type: "block_destroyed",
-      data: {x, y}
+      data: {x, y, activeItem}
     }));
     console.log("블록 파괴 서버로 전송 완료");  // ✅ 추가
   }

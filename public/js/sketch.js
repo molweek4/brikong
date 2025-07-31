@@ -99,8 +99,18 @@ function playClickSound() {
 // 전역으로 노출
 window.playClickSound = playClickSound;
 
+// 아이템 획득 알림 표시 함수
+function showItemNotification(itemType) {
+  itemNotification = itemType;
+  itemNotificationTimer = 120; // 2초간 표시 (60fps 기준)
+}
+
 let myScore = 0;
 let opponentScore = 0;
+
+// 아이템 획득 알림 관련 변수
+let itemNotification = null;
+let itemNotificationTimer = 0;
 
 let lastBlockAddTime = 0;
 let blockAddInterval = 8000; // 8초
@@ -178,7 +188,7 @@ function triggerUltimateSkill() {
 
   // 5. 서버에 제거된 블록들 전송 (멀티플레이 반영)
   bottomBlocks.forEach(block => {
-    sendBlockDestroyed(block.x, block.y);
+            sendBlockDestroyed(block.x, block.y, activeItem);
   });
 }
 
@@ -246,7 +256,7 @@ setTimeout(positionStartButton, 500);
 setTimeout(positionRestartButton, 500);
 
 window.preload = function() {
-  myImg = loadImage('../assets/images/bg2.png'); // 경로는 index.html 기준
+  myImg = loadImage('../assets/images/img.png'); // 경로는 index.html 기준
   // 예: 'assets/myimage.png' 또는 '../assets/myimage.png'
   blockImg1 = loadImage('../assets/images/blue.png'); // hp=1
   blockImg2 = loadImage('../assets/images/green.png'); // hp=2
@@ -265,17 +275,17 @@ window.preload = function() {
   itemSound = loadSound('../assets/sounds/item.wav');
   backgroundMusic = loadSound('../assets/sounds/background.wav');
   clickSound = loadSound('../assets/sounds/click.wav');
-};
 
-window.startGameFromServer = function () {
-  initGame();
-  loop(); // draw 루프 시작
-  
   // 아이템 이미지 로드
   itemImages.fire = loadImage('../assets/images/fire.gif');
   itemImages.slow = loadImage('../assets/images/slow.gif');
   //itemImages.double = loadImage('../assets/images/double.gif');
   itemImages.penalty = loadImage('../assets/images/change.gif');
+};
+
+window.startGameFromServer = function () {
+  initGame();
+  loop(); // draw 루프 시작
 };
 
 // p5.js 필수 함수: setup
@@ -443,7 +453,7 @@ window.draw = function () {
           ));
         }*/
         // 서버에 블록 파괴 알림
-        sendBlockDestroyed(blocks[hitIdx].x, blocks[hitIdx].y);
+        sendBlockDestroyed(blocks[hitIdx].x, blocks[hitIdx].y, activeItem);
         
         //blocks.splice(hitIdx, 1);
         //score++; // 블록 제거 시 점수 증가
@@ -490,25 +500,61 @@ window.draw = function () {
           // 아이템 획득 사운드 재생
           playItemSound();
           
+          
           // 아이템 획득 서버에 전송
           sendItemCollected(item.x, item.y, item.type);
           
-          // 자신이 획득한 아이템만 효과 적용
-          if (window.myCollectedItem && 
-              window.myCollectedItem.x === item.x && 
-              window.myCollectedItem.y === item.y && 
-              window.myCollectedItem.type === item.type) {
-            
-            // 아이템 효과 적용
-            activeItem = item.type;
-            clearTimeout(itemTimerRef.current);
-            itemTimerRef.current = setTimeout(() => {
-              activeItem = null;
-            }, 10000);
-            
-            // 효과 적용 후 초기화
-            window.myCollectedItem = null;
+          // 기존 아이템 효과 해제
+          if (activeItem) {
+            console.log("기존 아이템 효과 해제:", activeItem);
+            if (activeItem === "slow") {
+              myBall.dx /= 0.5;
+              myBall.dy /= 0.5;
+            } else if (activeItem === "penalty") {
+              paddle.w /= 0.5;
+            } else if (activeItem === "double") {
+              console.log("double 아이템 효과 해제");
+            } else if (activeItem === "fire") {
+              console.log("fire 아이템 효과 해제");
+            }
           }
+          
+          // 새 아이템 효과 적용
+          activeItem = item.type;
+          console.log("새 아이템 효과 적용:", item.type);
+          
+          // 아이템 효과 직접 적용
+          if (item.type === "slow") {
+            myBall.dx *= 0.5;
+            myBall.dy *= 0.5;
+          } else if (item.type === "penalty") {
+            paddle.w *= 0.5;
+          } else if (item.type === "double") {
+            // double 아이템은 점수 계산에서만 적용 (서버에서 처리)
+            console.log("double 아이템 효과 적용 - 점수 2배");
+          } else if (item.type === "fire") {
+            // fire 아이템은 공이 블록을 통과하도록 적용 (ball.js에서 처리)
+            console.log("fire 아이템 효과 적용 - 공이 블록 통과");
+          }
+          
+          // 타이머 설정
+          itemTimerRef.value = millis(); // 아이템 획득 시점 기록
+          clearTimeout(itemTimerRef.current);
+          itemTimerRef.current = setTimeout(() => {
+            // 아이템 효과 해제
+            if (activeItem === "slow") {
+              myBall.dx /= 0.5;
+              myBall.dy /= 0.5;
+            } else if (activeItem === "penalty") {
+              paddle.w /= 0.5;
+            } else if (activeItem === "double") {
+              console.log("double 아이템 효과 해제");
+            } else if (activeItem === "fire") {
+              console.log("fire 아이템 효과 해제");
+            }
+            activeItem = null;
+            console.log("아이템 효과 종료:", item.type);
+          }, 10000);
         }
       }
       
@@ -518,8 +564,6 @@ window.draw = function () {
       // 기존 방식 (단일 플레이어용)
       updateItems(myBall, paddle, items, activeItem, (type) => { activeItem = type; }, itemTimerRef);
     }
-    
-    updateItemEffect(activeItem, itemTimerRef.value, myBall, paddle, (type) => { activeItem = type; });
 
     // 화면 요소 그리기
     myBall.display();
@@ -603,8 +647,66 @@ window.draw = function () {
 
     // item 이름 표시
     if (activeItem) {
+      // 아이템 효과 표시 (화면 위쪽 중앙)
+      push();
+      
+      // 흰 배경 추가
+      fill(255, 255, 255, 230);
+      stroke(200, 200, 200);
+      strokeWeight(1);
+      rectMode(CENTER);
+      rect(width/2, 50, 200, 80, 10);
+      
+      // 아이템 아이콘과 텍스트 (가운데 정렬)
+      textSize(14);
+      textAlign(CENTER, CENTER);
+      fill(50, 50, 50); // 텍스트 색상을 어둡게
+      text(getEmoji(activeItem), width/2, 40);
+      
+      // 남은 시간 표시
+      const elapsedTime = millis() - itemTimerRef.value;
+      const remainingTime = Math.max(0, 10 - Math.floor(elapsedTime / 1000));
+      console.log("아이템 타이머:", { itemTimerRef: itemTimerRef.value, millis: millis(), elapsedTime, remainingTime });
+      
+      if (remainingTime > 0) {
+        textSize(14);
+        fill(0, 0, 0);
+        text(`${remainingTime}초 남음`, width/2, 60);
+      } else {
+        textSize(14);
+        fill(0, 0, 0);
+        text(`효과 해제`, width/2, 60);
+      }
+      pop();
+    }
+
+    // 아이템 획득 알림 표시 (상단 작게)
+    if (itemNotification && itemNotificationTimer > 0) {
+      push();
+      // 알림 박스 (상단 중앙)
+      fill(255, 255, 255, 230);
+      stroke(255, 215, 0);
+      strokeWeight(2);
+      rectMode(CENTER);
+      rect(width/2, 50, 200, 60, 10);
+      
+      // 아이템 아이콘
+      textSize(30);
+      textAlign(CENTER, CENTER);
+      text(getEmoji(itemNotification), width/2 - 40, 50);
+      
+      // 아이템 이름
       textSize(16);
-      text(`아이템: ${activeItem}`, 10, 35);
+      textFont(SansFontMedium);
+      fill(50, 50, 50);
+      text(`아이템 획득!`, width/2 + 20, 50);
+      
+      // 타이머 감소
+      itemNotificationTimer--;
+      if (itemNotificationTimer <= 0) {
+        itemNotification = null;
+      }
+      pop();
     }
 
     checkBlockGameOver();

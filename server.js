@@ -61,7 +61,7 @@ function addBlockRow() {
 function createItem(x, y) {
   const itemTypes = ['fire', 'slow', 'double', 'penalty'];
   const randomType = itemTypes[Math.floor(Math.random() * itemTypes.length)];
-  return { x, y, type: randomType, size: 40 };
+  return { x, y, type: randomType, size: 35 };
 }
 
 wss.on('connection', (ws) => {
@@ -157,8 +157,12 @@ wss.on('connection', (ws) => {
           block.hp -= 1;
           if (block.hp <= 0) {
             const player = room.players.find(p => p.ws === ws);
-            if (player) player.score += 1;
-            //console.log("점수 증가:", player.score); // ✅ 추가
+            if (player) {
+              // double 아이템 효과 확인 (클라이언트에서 전송된 activeItem 확인)
+              const scoreIncrease = msg.data.activeItem === "double" ? 2 : 1;
+              player.score += scoreIncrease;
+              console.log("점수 증가:", player.score, "아이템:", msg.data.activeItem);
+            }
             room.blocks = room.blocks.filter(b => !(b.x === block.x && b.y === block.y));
           }
         }
