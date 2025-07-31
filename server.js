@@ -146,14 +146,13 @@ wss.on('connection', (ws) => {
       const room = rooms[joinedRoom];
       console.log("블록 파괴 메시지 수신:", msg.data); // ✅ 추가
       if (room) {
-        const player = room.players.find(p => p.ws === ws);
-        if (player) player.score += 1;
-        console.log("점수 증가:", player.score); // ✅ 추가
-
         const block = room.blocks.find(b => b.x === msg.data.x && b.y === msg.data.y);
         if (block) {
           block.hp -= 1;
           if (block.hp <= 0) {
+            const player = room.players.find(p => p.ws === ws);
+            if (player) player.score += 1;
+            //console.log("점수 증가:", player.score); // ✅ 추가
             room.blocks = room.blocks.filter(b => !(b.x === block.x && b.y === block.y));
           }
         }
