@@ -53,7 +53,12 @@ export function onScoreUpdate(callback) {
 
 
 export function initSocket() {
-  socket = new WebSocket("ws://localhost:3000");
+  // 현재 페이지의 호스트명을 사용하여 WebSocket 연결
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${protocol}//${window.location.hostname}:3000`;
+  
+  console.log("WebSocket 연결 URL:", wsUrl);
+  socket = new WebSocket(wsUrl);
   window.socket = socket; // 전역으로 설정
 
   socket.onopen = () => {
