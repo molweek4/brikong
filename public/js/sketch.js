@@ -31,6 +31,10 @@ let itemSound;
 let backgroundMusic;
 let clickSound;
 
+let ultimateCooldown = 0;      // 궁극기 남은 쿨타임(ms)
+let ultimateReady = false;     // 궁극기 사용 가능 여부
+let ultimateDuration = 0;      // 이번 쿨타임 전체 길이(ms)
+
 // 사운드 재생 함수 추가
 function playHitSound() {
   try {
@@ -40,6 +44,12 @@ function playHitSound() {
   } catch (error) {
     console.error('Error playing hit sound:', error);
   }
+}
+
+function resetUltimateCooldown() {
+  ultimateDuration = random(10000, 15000); // 10~15초
+  ultimateCooldown = ultimateDuration;
+  ultimateReady = false;
 }
 
 function playPaddleSound() {
@@ -171,6 +181,7 @@ function initBlocks(){
 
 function triggerUltimateSkill() {
   console.log("🚀 궁극기 발동!");
+  if (!ultimateReady) return; 
   // 여기에 게임 속 로직 추가 (예: 블록 파괴, 점수 증가 등)
 
   let maxY = Math.max(...blocks.map(b => b.y));
@@ -190,6 +201,8 @@ function triggerUltimateSkill() {
   bottomBlocks.forEach(block => {
             sendBlockDestroyed(block.x, block.y, activeItem);
   });
+
+  resetUltimateCooldown();
 }
 
 
@@ -218,7 +231,10 @@ function initGame() {
   activeItem = null;
   gameOver = false;
   gameState = "playing";
+  window.gameState = "playing";
   myBall = new Ball(window.myPaddleColor || "white");
+
+  resetUltimateCooldown();
 }
 
 window.initGame = initGame;
@@ -293,7 +309,7 @@ window.setup = function () {
   const canvas = createCanvas(640, 480);
   canvas.parent('canvas-container');
   noLoop(); // 시작 전에 멈춤
-
+  resetUltimateCooldown();
   // 배경음악 시작
   playBackgroundMusic();
 
@@ -362,7 +378,7 @@ Ball.prototype.checkCollision = function(blocks, activeItem) {
 // p5.js 필수 함수: draw
 window.draw = function () {
   background('#FCEDD5');
-  console.log("draw 함수 실행, gameState:", window.gameState);
+  //console.log("draw 함수 실행, gameState:", window.gameState);
   if (gameState === "start" && logoImg) {
     /*fill(255);
     textSize(48);
@@ -413,6 +429,14 @@ window.draw = function () {
   }
 
   if (window.gameState === "playing") {
+  
+    if (!ultimateReady) {
+      ultimateCooldown -= deltaTime; // ms 단위
+      if (ultimateCooldown <= 0) {
+        ultimateCooldown = 0;
+        ultimateReady = true;
+      }
+    }
     textFont("sans-serif"); 
     if (startBtn) startBtn.style.display = 'none';
     if (restartBtn) restartBtn.style.display = 'none';
@@ -595,6 +619,40 @@ window.draw = function () {
       sendPaddlePosition(paddle.x, paddle.angle);
     }
 
+      const gaugeX = width - 40;   // 오른쪽 여백
+    const gaugeY = 50;           // 위쪽 여백
+    const gaugeWidth = 20;       // 게이지 폭
+    const gaugeHeight = 150;     // 전체 게이지 높이
+    const segmentCount = 5;      // 칸 개수
+    const segmentHeight = gaugeHeight / segmentCount;
+
+    // 테두리
+    push();
+    stroke(255);
+    noFill();
+    rect(gaugeX, gaugeY, gaugeWidth, gaugeHeight, 5);
+
+    // 채워진 칸 개수 계산
+    let fillRatio = 1 - (ultimateCooldown / ultimateDuration);
+    let filledSegments = Math.floor(fillRatio * segmentCount);
+
+    // 채워진 칸 그리기
+    noStroke();
+    for (let i = 0; i < filledSegments; i++) {
+      fill(0, 255, 0); // 초록색
+      rect(gaugeX, gaugeY + gaugeHeight - (i + 1) * segmentHeight, gaugeWidth, segmentHeight - 2, 3);
+    }
+
+    // READY 표시
+    if (ultimateReady) {
+      fill(255);
+      textSize(12);
+      textAlign(CENTER, BOTTOM);
+      text("READY", gaugeX + gaugeWidth / 2, gaugeY - 5);
+    }
+    pop();
+
+
     /*const opp = getOpponentPose();
     const myId = getPlayerId();
 
@@ -645,7 +703,7 @@ window.draw = function () {
       // 남은 시간 표시
       const elapsedTime = millis() - itemTimerRef.value;
       const remainingTime = Math.max(0, 10 - Math.floor(elapsedTime / 1000));
-      console.log("아이템 타이머:", { itemTimerRef: itemTimerRef.value, millis: millis(), elapsedTime, remainingTime });
+      //console.log("아이템 타이머:", { itemTimerRef: itemTimerRef.value, millis: millis(), elapsedTime, remainingTime });
       
       if (remainingTime > 0) {
         textSize(14);
