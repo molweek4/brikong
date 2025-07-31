@@ -53,9 +53,9 @@ export function onScoreUpdate(callback) {
 
 
 export function initSocket() {
-  // 현재 페이지의 호스트명을 사용하여 WebSocket 연결
+  // localhost에서만 WebSocket 연결
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = `${protocol}//${window.location.hostname}:3000`;
+  const wsUrl = `${protocol}//localhost:3000`;
   
   console.log("WebSocket 연결 URL:", wsUrl);
   socket = new WebSocket(wsUrl);
