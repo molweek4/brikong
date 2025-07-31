@@ -6,6 +6,7 @@
     <title>벽돌깨기 with Pose</title>
     <link rel="stylesheet" href="../style/style.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
@@ -79,6 +80,11 @@
     let opponentColor = null;
     
     function selectColor(button, color) {
+      // 클릭 사운드 재생
+      if (window.playClickSound) {
+        window.playClickSound();
+      }
+      
       // 모든 버튼의 테두리를 흰색으로 초기화
       const allButtons = document.querySelectorAll('[data-color]');
       allButtons.forEach(btn => {
@@ -117,6 +123,11 @@
     }
     
     function startGame() {
+      // 클릭 사운드 재생
+      if (window.playClickSound) {
+        window.playClickSound();
+      }
+      
       // 게임 시작 메시지 전송
       if (window.socket && window.socket.readyState === WebSocket.OPEN) {
         window.socket.send(JSON.stringify({ type: "ready_to_start" }));

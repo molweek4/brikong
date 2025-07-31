@@ -24,6 +24,82 @@ let SansFontBold;
 let SansFontMedium;
 let SansFontLight;
 
+// 사운드 관련 변수 추가
+let hitSound;
+let paddleSound;
+let itemSound;
+let backgroundMusic;
+let clickSound;
+
+// 사운드 재생 함수 추가
+function playHitSound() {
+  try {
+    if (hitSound && typeof hitSound.play === 'function') {
+      hitSound.play();
+    }
+  } catch (error) {
+    console.error('Error playing hit sound:', error);
+  }
+}
+
+function playPaddleSound() {
+  try {
+    if (paddleSound && typeof paddleSound.play === 'function') {
+      paddleSound.play();
+    }
+  } catch (error) {
+    console.error('Error playing paddle sound:', error);
+  }
+}
+
+// 전역으로 노출
+window.playPaddleSound = playPaddleSound;
+
+function playItemSound() {
+  try {
+    if (itemSound && typeof itemSound.play === 'function') {
+      itemSound.play();
+    }
+  } catch (error) {
+    console.error('Error playing item sound:', error);
+  }
+}
+
+function playBackgroundMusic() {
+  try {
+    if (backgroundMusic && typeof backgroundMusic.play === 'function') {
+      backgroundMusic.setVolume(0.3); // 볼륨 조절 (0.0 ~ 1.0)
+      backgroundMusic.loop(); // 반복 재생
+    }
+  } catch (error) {
+    console.error('Error playing background music:', error);
+  }
+}
+
+function stopBackgroundMusic() {
+  try {
+    if (backgroundMusic && typeof backgroundMusic.stop === 'function') {
+      backgroundMusic.stop();
+    }
+  } catch (error) {
+    console.error('Error stopping background music:', error);
+  }
+}
+
+function playClickSound() {
+  try {
+    if (clickSound && typeof clickSound.play === 'function') {
+      clickSound.play();
+    }
+  } catch (error) {
+    console.error('Error playing click sound:', error);
+  }
+}
+
+// 전역으로 노출
+window.playClickSound = playClickSound;
+
+
 let myScore = 0;
 let opponentScore = 0;
 
@@ -169,7 +245,7 @@ setTimeout(positionStartButton, 500);
 setTimeout(positionRestartButton, 500);
 
 window.preload = function() {
-  myImg = loadImage('../assets/images/img.png'); // 경로는 index.html 기준
+  myImg = loadImage('../assets/images/bg2.png'); // 경로는 index.html 기준
   // 예: 'assets/myimage.png' 또는 '../assets/myimage.png'
   blockImg1 = loadImage('../assets/images/blue.png'); // hp=1
   blockImg2 = loadImage('../assets/images/green.png'); // hp=2
@@ -181,6 +257,13 @@ window.preload = function() {
   SansFontBold = loadFont('../assets/GmarketSansTTFBold.ttf'); 
   SansFontLight = loadFont('../assets/GmarketSansTTFLight.ttf');
   SansFontMedium = loadFont('../assets/GmarketSansTTFMedium.ttf');
+
+  // 사운드 로드
+  hitSound = loadSound('../assets/sounds/hit.wav');
+  paddleSound = loadSound('../assets/sounds/paddle.wav');
+  itemSound = loadSound('../assets/sounds/item.wav');
+  backgroundMusic = loadSound('../assets/sounds/background.wav');
+  clickSound = loadSound('../assets/sounds/click.wav');
 };
 
 window.startGameFromServer = function () {
@@ -200,6 +283,9 @@ window.setup = function () {
   canvas.parent('canvas-container');
   noLoop(); // 시작 전에 멈춤
 
+  // 배경음악 시작
+  playBackgroundMusic();
+
   initSocket();
 
   initPoseManager((poseInfo) => {
@@ -218,13 +304,16 @@ window.setup = function () {
 
   if (restartBtn) {
     restartBtn.onclick = () => {
+      playClickSound(); // 클릭 사운드 재생
       restartBtn.style.display = 'none';
+      playBackgroundMusic(); // 배경음악 다시 시작
       sendReady();  // 새 준비 신호 전송
     }
   }
 
   if (startBtn) {
     startBtn.onclick = () => {
+      playClickSound(); // 클릭 사운드 재생
       startBtn.style.display = 'none';
       gameState = "waiting";
       loop();
@@ -321,6 +410,7 @@ window.draw = function () {
     // 공 업데이트 및 바닥에 닿았는지 검사
     if (myBall.update(false, paddle)) {
       gameState = "gameover";
+      stopBackgroundMusic(); // 배경음악 멈춤
       noLoop();
       if (restartBtn) restartBtn.style.display = 'block';
     }
@@ -328,6 +418,9 @@ window.draw = function () {
     // 충돌 검사 및 블록/아이템 처리
     const hitIdx = myBall.checkCollision(blocks, activeItem);
     if (hitIdx !== -1) {
+      // 충돌 사운드 재생
+      playHitSound();
+      
       /*blocks[hitIdx].hp--;
       if (blocks[hitIdx].hp <= 0) {
         // 아이템 생성 확률 (40%)
@@ -384,6 +477,9 @@ window.draw = function () {
         if (myBall.x > item.x - item.size/2 && myBall.x < item.x + item.size/2 &&
             myBall.y > item.y - item.size/2 && myBall.y < item.y + item.size/2) {
           
+          // 아이템 획득 사운드 재생
+          playItemSound();
+          
           // 아이템 획득 서버에 전송
           sendItemCollected(item.x, item.y, item.type);
           
@@ -417,9 +513,8 @@ window.draw = function () {
 
     // 화면 요소 그리기
     myBall.display();
-    paddle.display();
-
-    // 상대방 패들 표시
+    
+    // 상대방 패들 표시 (먼저 그리기)
     if (window.opponentPaddle) {
       push();
       translate(opponentPaddle.x, paddle.y);
@@ -430,6 +525,9 @@ window.draw = function () {
       rect(0, 0, paddle.w, paddle.h);
       pop();
     }
+    
+    // 내 패들 표시 (나중에 그리기 - 위에 보이게)
+    paddle.display();
 
     // 상대방 공 표시
     if (window.opponentBall) {
@@ -535,6 +633,7 @@ function checkBlockGameOver() {
   for (let b of blocks) {
     if (b.y + b.h >= paddle.y - paddle.h / 2) {
       gameState = "gameover";
+      stopBackgroundMusic(); // 배경음악 멈춤
       if (restartBtn) restartBtn.style.display = 'block';
       noLoop();
       break;
