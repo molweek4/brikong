@@ -499,7 +499,7 @@ window.draw = function () {
       fill(255, 50, 50);
       textSize(48);
       textAlign(CENTER, CENTER);
-      text("🔥 YOU ARE DEAD 🔥", width / 2, height / 2);
+      text("🔥GAME OVER🔥", width / 2, height / 2);
     }
 
     // w() 내에서 score 표시
@@ -552,11 +552,28 @@ window.draw = function () {
     const isWin = displayText === "WIN!";
     const resultIcon = isWin ? "🏆" : (displayText === "LOSE..." ? "☠️" : "🤝");
 
+    /*textFont(SansFontBold);  
+
     // 상단 타이틀
     fill(isWin ? 'gold' : (displayText === "LOSE..." ? 'red' : 'white'));
     textSize(44);
     textAlign(CENTER, CENTER);
-    text(`${resultIcon} ${displayText} ${resultIcon}`, width / 2, height / 2 - 120);
+    text(`${resultIcon} ${displayText} ${resultIcon}`, width / 2, height / 2 - 120);*/
+
+    const loseColor = '#9e072dff';
+
+    textFont(SansFontBold);  
+    fill(isWin ? 'gold' : (displayText === "LOSE..." ? loseColor: 'white'));
+    textSize(50);
+    textAlign(CENTER, CENTER);
+    text(displayText, width / 2, height / 2 - 140);
+
+    // 🎨 이모지 (커스텀 폰트 적용 안함 → 시스템 폰트 사용)
+    textFont('sans-serif'); 
+    textSize(50);
+    text(resultIcon, width / 2 - textWidth(displayText) / 2 - 55, height / 2 - 140);
+    text(resultIcon, width / 2 + textWidth(displayText) / 2 + 55, height / 2 - 140);
+
 
     // 점수 패널 (박스)
     const panelWidth = 400;
@@ -567,6 +584,7 @@ window.draw = function () {
     rectMode(CENTER);
     rect(width / 2, height / 2 + 10, panelWidth, panelHeight, 20);
 
+      textFont(SansFontMedium);
     // 내 점수
     fill('white');
     noStroke();
