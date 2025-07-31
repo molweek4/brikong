@@ -70,8 +70,14 @@ export function initSocket() {
     //console.log("msg.playerCount:", msg.playerCount);
     //console.log("전체 msg 객체:", JSON.stringify(msg, null, 2));
 
+
     if (msg.type === "assign_id") {
       playerId = msg.playerId;
+    }
+
+    if (msg.type === "opponent_left") {
+       console.log("상대방 나감 이벤트 수신");
+      window.opponentLeft = true;
     }
 
     if (msg.type === "assign_index") {
@@ -173,7 +179,7 @@ export function initSocket() {
       window.finalScores = msg.scores;
       window.finalResultText = resultText;
     }
-    
+
     // 상대방 패들 위치 수신
     if (msg.type === "opponent_paddle") {
       window.opponentPaddle = {
