@@ -328,7 +328,7 @@ window.draw = function () {
     // 충돌 검사 및 블록/아이템 처리
     const hitIdx = myBall.checkCollision(blocks, activeItem);
     if (hitIdx !== -1) {
-      blocks[hitIdx].hp--;
+      /*blocks[hitIdx].hp--;
       if (blocks[hitIdx].hp <= 0) {
         // 아이템 생성 확률 (40%)
         if (Math.random() < 0.4) {
@@ -338,13 +338,13 @@ window.draw = function () {
             blocks[hitIdx].y + blocks[hitIdx].h/2,
             type
           ));
-        }
+        }*/
         // 서버에 블록 파괴 알림
         sendBlockDestroyed(blocks[hitIdx].x, blocks[hitIdx].y);
         
-        blocks.splice(hitIdx, 1);
+        //blocks.splice(hitIdx, 1);
         //score++; // 블록 제거 시 점수 증가
-      }
+      
     }
 
     // 아이템 표시 및 획득 처리 (서버에서 받은 아이템 사용)
