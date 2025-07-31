@@ -71,7 +71,7 @@ wss.on('connection', (ws) => {
       let roomId = Object.keys(rooms).find(id => rooms[id].players.length < 2);
       if (!roomId) {
         roomId = `room${roomCounter++}`;
-        rooms[roomId] = { players: [], colors: {}, usedColors: [], blocks: [], items: [] };
+        rooms[roomId] = { players: [], colors: {}, usedColors: [], blocks: [], items: [] , isDead: [false, false]};
       }
       rooms[roomId].players.push({ ws, score: 0 }); 
       joinedRoom = roomId;
@@ -181,6 +181,36 @@ wss.on('connection', (ws) => {
         }
       }
     }
+
+    if (msg.type === 'player_dead') {
+      const room = rooms[joinedRoom];
+      if (room) {
+        const playerIndex = room.players.findIndex(p => p.ws === ws);
+        if (playerIndex !== -1) {
+          room.isDead[playerIndex] = true;
+        }
+
+        // 둘 다 죽었는지 확인
+        if (room.isDead[0] && room.isDead[1]) {
+          const scores = room.players.map(p => p.score);
+          let winner = -1;
+          if (scores[0] > scores[1]) winner = 0;
+          else if (scores[1] > scores[0]) winner = 1;
+
+          // 🔥 모든 플레이어에게 게임 종료 결과 전송
+          room.players.forEach((player, idx) => {
+            if (player.ws.readyState === WebSocket.OPEN) {
+              player.ws.send(JSON.stringify({
+                type: "game_over_result",
+                scores,
+                winner // -1이면 무승부
+              }));
+            }
+          });
+        }
+      }
+    }
+
 
     if (msg.type === 'item_collected') {
       const room = rooms[joinedRoom];

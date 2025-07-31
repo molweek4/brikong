@@ -1,10 +1,10 @@
 import { Ball } from './ball.js';
 import { Block } from './block.js';
-import { getEmoji, Item, updateItemEffect, updateItems } from './item.js';
+import { getEmoji, updateItemEffect, updateItems } from './item.js';
 import { Paddle } from './paddle.js';
 
 import { initHandDetector, initPoseManager } from './poseManager.js';
-import { onScoreUpdate, getInitialBlocks, initSocket, joinRoom, onBlockAdd, onBlockUpdate, sendBallPosition, sendBlockDestroyed, sendItemCollected, sendPaddlePosition, sendPaddleUpdate } from './socket.js';
+import { getInitialBlocks, initSocket, joinRoom, onBlockAdd, onBlockUpdate, onScoreUpdate, sendBallPosition, sendBlockDestroyed, sendItemCollected, sendPaddlePosition, sendPaddleUpdate } from './socket.js';
 
 // 전역 변수
 let paddle;
@@ -42,6 +42,8 @@ let playerCount = 1; // 대기방 인원 표시용
 export function getPlayerCount() {
   return playerCount;
 }
+
+window.isPlayerDead = false;
 
 
 onScoreUpdate((scores) => {
@@ -154,7 +156,7 @@ function positionRestartButton() {
   if (!canvas || !btn) return;
   const rect = canvas.getBoundingClientRect();
   btn.style.left = `${rect.left + rect.width / 2}px`;
-  btn.style.top = `${rect.top + rect.height / 2 + 60}px`;
+  btn.style.top = `${rect.top + rect.height / 2 + 140}px`;
   btn.style.transform = 'translate(-50%, 0)';
   //btn.style.display = 'block';
 }
@@ -205,12 +207,14 @@ window.setup = function () {
   initPoseManager((poseInfo) => {
     //console.log("Pose detected", poseInfo);
     if (poseInfo.paddleAngle < -90 || poseInfo.paddleAngle > 90) return;
-    if (!paddle) {
-      paddle = new Paddle(); // Paddle이 없으면 즉시 생성
-    }
-    paddle.applyPoseControl(poseInfo);
+    if(!window.isPlayerDead){
+      if (!paddle) {
+        paddle = new Paddle(); // Paddle이 없으면 즉시 생성
+      }
+      paddle.applyPoseControl(poseInfo);
 
-    sendPaddleUpdate(paddle.x, paddle.angle);
+      sendPaddleUpdate(paddle.x, paddle.angle);
+    }
   }).then(() => { 
     return initHandDetector(triggerUltimateSkill);
   })
@@ -282,6 +286,7 @@ window.draw = function () {
     return;
   }
 
+
   if (window.gameState === "waiting") {
     // 대기방 화면 그리기
     background(0, 0, 0, 150);
@@ -320,10 +325,18 @@ window.draw = function () {
     }
     // 공 업데이트 및 바닥에 닿았는지 검사
     if (myBall.update(false, paddle)) {
-      gameState = "gameover";
+      /*gameState = "gameover";
       noLoop();
-      if (restartBtn) restartBtn.style.display = 'block';
+      if (restartBtn) restartBtn.style.display = 'block';*/
+
+      window.isPlayerDead = true; 
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: "player_dead" }));
+      }
     }
+
+    
+
 
     // 충돌 검사 및 블록/아이템 처리
     const hitIdx = myBall.checkCollision(blocks, activeItem);
@@ -471,7 +484,23 @@ window.draw = function () {
       lastBlockAddTime = millis();
     }*/
 
-    // draw() 내에서 score 표시
+
+
+    if (window.isPlayerDead) {
+      push();
+      noStroke();
+      fill(0, 180); // (검정, 알파=180) → 더 진하게 어두워짐
+      rect(0, 0, width, height);
+
+      push();
+      pop();
+      fill(255, 50, 50);
+      textSize(48);
+      textAlign(CENTER, CENTER);
+      text("🔥 YOU ARE DEAD 🔥", width / 2, height / 2);
+    }
+
+    // w() 내에서 score 표시
     fill(255);
     textSize(20);
     textAlign(LEFT, TOP);
@@ -488,7 +517,7 @@ window.draw = function () {
     checkBlockGameOver();
   }
 
-  if (gameState === "gameover") {
+  /*if (gameState === "gameover") {
     textFont("sans-serif"); 
     positionRestartButton();
     rectMode(CORNER);
@@ -506,7 +535,57 @@ window.draw = function () {
     text("재시작 버튼을 눌러주세요", width / 2, height / 2 + 20);
 
     if (restartBtn) restartBtn.style.display = 'block';
+  }*/
+
+
+  if (window.gameState === "final_result") {
+     background(30, 30, 30, 240);
+
+    // 승리 여부에 따른 스타일
+    let displayText;
+    if (window.finalResultText === "승리!") displayText = "WIN!";
+    else if (window.finalResultText === "패배...") displayText = "LOSE...";
+    else displayText = "무승부";
+
+    const isWin = displayText === "WIN!";
+    const resultIcon = isWin ? "🏆" : (displayText === "LOSE..." ? "☠️" : "🤝");
+
+    // 상단 타이틀
+    fill(isWin ? 'gold' : (displayText === "LOSE..." ? 'red' : 'white'));
+    textSize(44);
+    textAlign(CENTER, CENTER);
+    text(`${resultIcon} ${displayText} ${resultIcon}`, width / 2, height / 2 - 120);
+
+    // 점수 패널 (박스)
+    const panelWidth = 400;
+    const panelHeight = 180;
+    fill(50, 50, 50, 220);
+    stroke(200);
+    strokeWeight(3);
+    rectMode(CENTER);
+    rect(width / 2, height / 2 + 10, panelWidth, panelHeight, 20);
+
+    // 내 점수
+    fill('white');
+    noStroke();
+    textSize(28);
+    textAlign(LEFT, CENTER);
+    text("내 점수:", width / 2 - 150, height / 2 - 30);
+    textAlign(RIGHT, CENTER);
+    text(window.finalScores[window.myPlayerIndex], width / 2 + 150, height / 2 - 30);
+
+    // 상대 점수
+    textAlign(LEFT, CENTER);
+    text("상대 점수:", width / 2 - 150, height / 2 + 35);
+    textAlign(RIGHT, CENTER);
+    text(window.finalScores[1 - window.myPlayerIndex], width / 2 + 150, height / 2 + 35);
+
+    // 리플레이 버튼 안내
+    if (restartBtn) {
+    restartBtn.style.display = 'block';
+    positionRestartButton();
   }
+
 
 };
 
@@ -534,10 +613,16 @@ function moveBlocksDown() {
 function checkBlockGameOver() {
   for (let b of blocks) {
     if (b.y + b.h >= paddle.y - paddle.h / 2) {
-      gameState = "gameover";
+      /*gameState = "gameover";
       if (restartBtn) restartBtn.style.display = 'block';
       noLoop();
+      break;*/
+
+      window.isPlayerDead = true;
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: "player_dead" }));
+      }
       break;
     }
   }
-}
+}}

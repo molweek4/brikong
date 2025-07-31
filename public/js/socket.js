@@ -160,6 +160,20 @@ export function initSocket() {
       }
     }
     
+    if (msg.type === "game_over_result") {
+      const [score1, score2] = msg.scores;
+      let resultText = "무승부!";
+      if (msg.winner === window.myPlayerIndex) {
+        resultText = "승리!";
+      } else if (msg.winner !== -1) {
+        resultText = "패배...";
+      }
+
+      gameState = "final_result";
+      window.finalScores = msg.scores;
+      window.finalResultText = resultText;
+    }
+    
     // 상대방 패들 위치 수신
     if (msg.type === "opponent_paddle") {
       window.opponentPaddle = {
