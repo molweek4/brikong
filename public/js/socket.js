@@ -53,9 +53,8 @@ export function onScoreUpdate(callback) {
 
 
 export function initSocket() {
-  // 현재 페이지의 호스트명을 사용하여 WebSocket 연결
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = `${protocol}//${window.location.hostname}:3000`;
+  // localhost:3000에서만 WebSocket 연결
+  const wsUrl = `ws://localhost:3000`;
   
   console.log("WebSocket 연결 URL:", wsUrl);
   socket = new WebSocket(wsUrl);
@@ -172,6 +171,7 @@ export function initSocket() {
     }
     
     if (msg.type === "game_over_result") {
+      console.log("게임 종료 결과 수신:", msg);
       const [score1, score2] = msg.scores;
       let resultText = "무승부!";
       if (msg.winner === window.myPlayerIndex) {
@@ -180,9 +180,11 @@ export function initSocket() {
         resultText = "패배...";
       }
 
-      gameState = "final_result";
+      console.log("결과 텍스트:", resultText, "내 인덱스:", window.myPlayerIndex, "승자:", msg.winner);
+      window.gameState = "final_result";
       window.finalScores = msg.scores;
       window.finalResultText = resultText;
+      console.log("final_result 상태로 변경됨");
     }
 
     // 상대방 패들 위치 수신

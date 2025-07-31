@@ -8,21 +8,9 @@ const path = require('path');
 
 const app = express();
 
-// HTTPS 설정
-let server;
-try {
-  // SSL 인증서 파일 확인
-  const privateKey = fs.readFileSync('./ssl/private.key', 'utf8');
-  const certificate = fs.readFileSync('./ssl/certificate.crt', 'utf8');
-  
-  const credentials = { key: privateKey, cert: certificate };
-  server = https.createServer(credentials, app);
-  console.log('HTTPS 서버로 실행됩니다.');
-} catch (error) {
-  // SSL 인증서가 없으면 HTTP로 실행
-  server = http.createServer(app);
-  console.log('HTTP 서버로 실행됩니다. (HTTPS를 원하면 SSL 인증서를 추가하세요)');
-}
+// HTTP 서버로 실행 (로컬 개발용)
+const server = http.createServer(app);
+console.log('HTTP 서버로 실행됩니다. (로컬 개발 환경)');
 
 const wss = new WebSocket.Server({ server });
 
@@ -201,18 +189,24 @@ wss.on('connection', (ws) => {
 
     if (msg.type === 'player_dead') {
       const room = rooms[joinedRoom];
+      console.log("플레이어 사망 메시지 수신:", msg);
       if (room) {
         const playerIndex = room.players.findIndex(p => p.ws === ws);
         if (playerIndex !== -1) {
           room.isDead[playerIndex] = true;
+          console.log("플레이어", playerIndex, "사망 처리됨");
+          console.log("현재 isDead 상태:", room.isDead);
         }
 
         // 둘 다 죽었는지 확인
         if (room.isDead[0] && room.isDead[1]) {
+          console.log("게임 종료! 두 플레이어 모두 사망");
           const scores = room.players.map(p => p.score);
           let winner = -1;
           if (scores[0] > scores[1]) winner = 0;
           else if (scores[1] > scores[0]) winner = 1;
+
+          console.log("최종 점수:", scores, "승자:", winner);
 
           // 🔥 모든 플레이어에게 게임 종료 결과 전송
           room.players.forEach((player, idx) => {
@@ -222,6 +216,7 @@ wss.on('connection', (ws) => {
                 scores,
                 winner // -1이면 무승부
               }));
+              console.log("플레이어", idx, "에게 게임 종료 결과 전송");
             }
           });
         }
@@ -329,10 +324,8 @@ setInterval(() => {
 }, 8000);
 
 const PORT = process.env.PORT || 3000;
-const HOST = '0.0.0.0'; // 모든 IP에서 접속 가능
+const HOST = 'localhost'; // localhost에서만 실행
 
 server.listen(PORT, HOST, () => {
   console.log(`서버가 http://${HOST}:${PORT} 에서 실행 중입니다.`);
-  console.log(`로컬 접속: http://localhost:${PORT}`);
-  console.log(`다른 기기 접속: http://[로컬IP]:${PORT}`);
 });

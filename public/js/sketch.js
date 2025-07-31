@@ -99,7 +99,6 @@ function playClickSound() {
 // 전역으로 노출
 window.playClickSound = playClickSound;
 
-
 let myScore = 0;
 let opponentScore = 0;
 
@@ -308,8 +307,8 @@ window.setup = function () {
 
   if (restartBtn) {
     restartBtn.onclick = () => {
-      restartBtn.style.display = 'none';
-      sendReady();  // 새 준비 신호 전송
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: "player_leave" }));
     }
     location.reload(); // 나만 새로고침
   };
@@ -325,6 +324,7 @@ window.setup = function () {
       joinRoom();
     };
   }
+};
 
 // Ball의 checkCollision은 충돌한 블록 인덱스만 반환
 Ball.prototype.checkCollision = function(blocks, activeItem) {
@@ -413,9 +413,9 @@ window.draw = function () {
     }
     // 공 업데이트 및 바닥에 닿았는지 검사
     if (myBall.update(false, paddle)) {
-      gameState = "gameover";
+      /*gameState = "gameover";
       noLoop();
-      if (restartBtn) restartBtn.style.display = 'block';
+      if (restartBtn) restartBtn.style.display = 'block';*/
 
       window.isPlayerDead = true; 
       if (socket && socket.readyState === WebSocket.OPEN) {
@@ -431,7 +431,6 @@ window.draw = function () {
     if (hitIdx !== -1) {
       // 충돌 사운드 재생
       playHitSound();
-      
       /*blocks[hitIdx].hp--;
       if (blocks[hitIdx].hp <= 0) {
         // 아이템 생성 확률 (40%)
@@ -524,8 +523,9 @@ window.draw = function () {
 
     // 화면 요소 그리기
     myBall.display();
-    
-    // 상대방 패들 표시 (먼저 그리기)
+    paddle.display();
+
+    // 상대방 패들 표시
     if (window.opponentPaddle) {
       push();
       translate(opponentPaddle.x, paddle.y);
@@ -536,9 +536,6 @@ window.draw = function () {
       rect(0, 0, paddle.w, paddle.h);
       pop();
     }
-    
-    // 내 패들 표시 (나중에 그리기 - 위에 보이게)
-    paddle.display();
 
     // 상대방 공 표시
     if (window.opponentBall) {
@@ -706,7 +703,8 @@ window.draw = function () {
     textAlign(CENTER, TOP);
     text("상대방이 방을 나갔습니다", width / 2, height / 2 + 140);
   }
-}
+
+
 };
 
 function addBlockRow() {
@@ -733,6 +731,11 @@ function moveBlocksDown() {
 function checkBlockGameOver() {
   for (let b of blocks) {
     if (b.y + b.h >= paddle.y - paddle.h / 2) {
+      /*gameState = "gameover";
+      if (restartBtn) restartBtn.style.display = 'block';
+      noLoop();
+      break;*/
+
       window.isPlayerDead = true;
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({ type: "player_dead" }));
@@ -740,4 +743,4 @@ function checkBlockGameOver() {
       break;
     }
   }
-}
+}}
