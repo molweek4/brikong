@@ -228,24 +228,70 @@ wss.on('connection', (ws) => {
         });
       }
     }
+
+    if (msg.type === 'player_leave') {
+  const room = rooms[joinedRoom];
+  if (room) {
+    room.players = room.players.filter(p => p.ws !== ws);
+
+    // 색상 정보 제거
+    delete room.colors[ws.id];
+    room.usedColors = room.usedColors.filter(c => c !== msg.color);
+
+    // 방 비었으면 삭제
+    if (room.players.length === 0) {
+      delete rooms[joinedRoom];
+    } else {
+      const count = room.players.length;
+
+      const gameEnded = room.isDead && room.isDead[0] && room.isDead[1];
+      if (!gameEnded) {
+        room.players.forEach(player => {
+          if (player.ws.readyState === WebSocket.OPEN) {
+            player.ws.send(JSON.stringify({
+              type: 'waiting',
+              playerCount: count
+            }));
+
+            player.ws.send(JSON.stringify({
+              type: 'opponent_left'
+            }));
+          }
+        });
+      }
+    }
+  }
+}
+
   });
 
   ws.on('close', () => {
-    if (joinedRoom && rooms[joinedRoom]) {
-      rooms[joinedRoom].players = rooms[joinedRoom].players.filter(p => p.ws !== ws);
-      if (rooms[joinedRoom].players.length === 0) {
-        delete rooms[joinedRoom];
-      } else {
-        const count = rooms[joinedRoom].players.length;
-        rooms[joinedRoom].players.forEach(player => {
+  if (joinedRoom && rooms[joinedRoom]) {
+    const room = rooms[joinedRoom];
+
+    // 현재 방에서 플레이어 제거
+    room.players = room.players.filter(p => p.ws !== ws);
+
+    if (room.players.length === 0) {
+      delete rooms[joinedRoom];
+    } else {
+      // ✅ 게임이 끝난 상태인지 확인
+      const gameEnded = room.isDead && room.isDead[0] && room.isDead[1];
+
+      if (!gameEnded) { 
+        // 게임 중이었거나 게임이 끝나지 않은 상태라면 'waiting' 메시지 전송
+        const count = room.players.length;
+        room.players.forEach(player => {
           if (player.ws.readyState === WebSocket.OPEN) {
             player.ws.send(JSON.stringify({ type: 'waiting', playerCount: count }));
           }
         });
       }
+      // 게임이 끝난 상태면 아무 메시지도 보내지 않음 → 남은 플레이어는 결과창 유지
     }
-  });
+  }
 });
+}); 
 
 // 주기적으로 블록 줄 추가
 setInterval(() => {

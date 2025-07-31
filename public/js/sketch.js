@@ -222,9 +222,11 @@ window.setup = function () {
 
   if (restartBtn) {
     restartBtn.onclick = () => {
-      restartBtn.style.display = 'none';
-      sendReady();  // 새 준비 신호 전송
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: "player_leave" }));
     }
+    location.reload(); // 나만 새로고침
+  };
   }
 
   if (startBtn) {
@@ -584,6 +586,13 @@ window.draw = function () {
     if (restartBtn) {
     restartBtn.style.display = 'block';
     positionRestartButton();
+  }
+
+  if (window.opponentLeft) {
+    fill(255); 
+    textSize(14);
+    textAlign(CENTER, TOP);
+    text("상대방이 방을 나갔습니다", width / 2, height / 2 + 140);
   }
 
 
